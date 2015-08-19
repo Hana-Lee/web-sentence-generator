@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}{% endblock %}
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
-    </body>
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Welcome!{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ asset('js/webix/codebase/webix.css') }}" type="text/css" media="screen" charset="utf-8"/>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+
+    {% block stylesheets %}{% endblock %}
+
+    <script src="{{ asset('js/webix/codebase/webix.js') }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ asset('js/jquery/jquery-2.1.4.min.js') }}" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+{% block body %}{% endblock %}
+{% block javascripts %}{% endblock %}
+</body>
 </html>
