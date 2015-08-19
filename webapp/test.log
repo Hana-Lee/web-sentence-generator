@@ -1,6 +1,0 @@
-%msg%%msg%[2015-08-18 17:39:38] test_logger.WARNING: Test 1 [] []
-[2015-08-18 17:39:38] test_logger.WARNING: Test 2 [] []
-[2015-08-18 17:42:13] test_logger.WARNING: Test 1 [] []
-[2015-08-18 17:42:13] test_logger.WARNING: Test 2 [] []
-[2015-08-18 17:42:18] test_logger.WARNING: Test 1 [] []
-[2015-08-18 17:42:18] test_logger.WARNING: Test 2 [] []
