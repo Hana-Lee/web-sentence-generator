@@ -60,6 +60,8 @@
     <script type="text/javascript" charset="UTF-8">
         "use strict";
 
+        webix.i18n.setLocale("ko-KR");
+
         function isUndefined(value) {return typeof value === "undefined";}
 
         if (isUndefined(window.sg)) {
@@ -93,39 +95,47 @@
                 id: wordId, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
                     {id: "noun_checkbox", header: {content: "masterCheckbox"}, checkValue: "on", uncheckValue: "off", template: "{common.checkbox()}", width: 40},
-                    {id: "word", header: "단어", fillspace: true},
-                    {id: "created", header: "만든날", width: 200, css: "t_center"}
+                    {id: "word", header: "단어", sort:"string", fillspace: true},
+                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 200, css: "t_center"}
                 ],
                 data: getWordData(wordId),
                 select:true
             }
         }
 
-        function getWordData(wordId) {
-            var dataResult = [];
-            var dataTemplate = {id: 1, number: "1", word: "감사합니다", created: "2015-08-19 19:49:00"};
+        function getWordDataFromServer(wordId) {
+            var wordIdCode = 1;
             switch (wordId) {
                 case sg.word.noun.id:
-                    dataResult.push({id: 1, number: "1", word: "감사합니다-1", created: "2015-08-19 19:49:00"});
-                    dataResult.push({id: 2, number: "2", word: "감사합니다-2", created: "2015-08-19 19:49:00"});
+                    wordIdCode = 1;
                     break;
                 case sg.word.verb.id:
-                    dataResult.push({id: 1, number: "1", word: "감사합니다-1", created: "2015-08-19 19:49:00"});
-                    dataResult.push({id: 2, number: "2", word: "감사합니다-2", created: "2015-08-19 19:49:00"});
+                    wordIdCode = 2;
                     break;
                 case sg.word.adverb.id:
-                    dataResult.push({id: 1, number: "1", word: "감사합니다-1", created: "2015-08-19 19:49:00"});
-                    dataResult.push({id: 2, number: "2", word: "감사합니다-2", created: "2015-08-19 19:49:00"});
+                    wordIdCode = 3;
                     break;
                 case sg.word.adjective.id:
-                    dataResult.push({id: 1, number: "1", word: "감사합니다-1", created: "2015-08-19 19:49:00"});
-                    dataResult.push({id: 2, number: "2", word: "감사합니다-2", created: "2015-08-19 19:49:00"});
-                    break;
-                default :
+                    wordIdCode = 4;
                     break;
             }
+            var jsonData = webix.ajax().sync().post("get/word/" + wordIdCode);
+            var statusCode = jsonData.status;
+            var result = [];
+            if (statusCode === 200) {
+                result = JSON.parse(jsonData["response"]);
+                var count = 1;
+                $(result).each(function(index, value) {
+                    value["number"] = count++;
+                    value["created"] = new Date(Number(value["created"]));
+                    result[index] = value;
+                });
+            }
+            return result;
+        }
 
-            return dataResult;
+        function getWordData(wordId) {
+            return getWordDataFromServer(wordId);
         }
 
         var topToolbar = {
@@ -301,9 +311,9 @@
             type:"wide", css:"main_container", cols:[
                 {
                     type: "space", width:960, rows: [
-                    topToolbar,
-                    bodyLayout
-                ]
+                        topToolbar,
+                        bodyLayout
+                    ]
                 }
             ]
         });
