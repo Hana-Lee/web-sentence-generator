@@ -34,18 +34,16 @@ class SG_DataController extends Controller
         $repository = $this->getDoctrine()->getRepository("AppBundle:Word");
 
         $manager = $this->getDoctrine()->getEntityManager();
-        $words1 = $repository->createQueryBuilder("w")->where("w.wordType = :wordType")->setParameter("wordType", $wordType)->getQuery()->getResult(Query::HYDRATE_ARRAY);
+        $words = $repository->createQueryBuilder("w")
+            ->where("w.wordType = :wordType")->setParameter("wordType", $wordType)
+            ->getQuery()->getResult(Query::HYDRATE_ARRAY);
 
-        $words = $this->getDoctrine()->getRepository("AppBundle:Word")->findBy(
-            array("wordType" => 1)
-        );
-
-        if (!$words1) {
+        if (!$words) {
             throw $this->createNotFoundException(
                 "No Words found for word type : " . $wordType
             );
         } else {
-            return $words1;
+            return $words;
         }
     }
 }
