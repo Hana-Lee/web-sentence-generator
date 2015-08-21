@@ -65,18 +65,33 @@
         function isUndefined(value) {return typeof value === "undefined";}
 
         if (isUndefined(window.sg)) {
-            window.sg = {
-                context : {
-                    currentMenuId : "show_word"
-                },
-                word : {
-                    noun: {id: "noun", name:"명사"},
-                    verb: {id: "verb", name:"동사"},
-                    adverb: {id: "adverb", name: "부사"},
-                    adjective: {id: "adjective", name: "형용사"}
-                }
-            }
+            window.sg = {};
         }
+
+        var sgWord = {
+            noun: {id: "noun", name: "명사", code: 0},
+            verb: {id: "verb", name: "동사", code: 1},
+            adverb: {id: "adverb", name: "부사", code: 2},
+            adjective: {id: "adjective", name: "형용사", code: 3}
+        };
+
+        var sgGenre = {
+            poetry : {id:"poetry", name:"시", code:0},
+            nursery_rime : {id:"nursery_rime", name:"동시", code:1},
+            novel : {id:"novel", name:"소설", code:2},
+            essay : {id:"essay", name:"수필", code:3},
+            fairy_tail : {id: "fairy_tail", name : "동화", code:4},
+            etc : {id:"etc", name:"기타", code:5}
+        };
+
+        var sgContext = {
+            currentMenuId : "show_word"
+        };
+
+
+        sg.context = sgContext;
+        sg.word = sgWord;
+        sg.genre = sgGenre;
 
         function showLovePopup() {
             webix.ui({
@@ -90,36 +105,21 @@
             }).show();
         }
 
-        function makeWordDataTable(wordId) {
+        function makeWordDataTable(word) {
             return {
-                id: wordId, view: "datatable", columns: [
+                id: word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
                     {id: "noun_checkbox", header: {content: "masterCheckbox"}, checkValue: "on", uncheckValue: "off", template: "{common.checkbox()}", width: 40},
                     {id: "word", header: "단어", sort:"string", fillspace: true},
                     {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 200, css: "t_center"}
                 ],
-                data: getWordData(wordId),
+                data: getWordData(word),
                 select:true
             }
         }
 
-        function getWordDataFromServer(wordId) {
-            var wordIdCode = 1;
-            switch (wordId) {
-                case sg.word.noun.id:
-                    wordIdCode = 1;
-                    break;
-                case sg.word.verb.id:
-                    wordIdCode = 2;
-                    break;
-                case sg.word.adverb.id:
-                    wordIdCode = 3;
-                    break;
-                case sg.word.adjective.id:
-                    wordIdCode = 4;
-                    break;
-            }
-            var jsonData = webix.ajax().sync().post("get/word/" + wordIdCode);
+        function getWordDataFromServer(word) {
+            var jsonData = webix.ajax().sync().post("get/word/" + word.code);
             var statusCode = jsonData.status;
             var result = [];
             if (statusCode === 200) {
@@ -134,8 +134,41 @@
             return result;
         }
 
-        function getWordData(wordId) {
-            return getWordDataFromServer(wordId);
+        function getWordData(word) {
+            return getWordDataFromServer(word);
+        }
+
+        function getWordCountInGenreFromServer(genre) {
+            var code;
+            if (isUndefined(genre)) {
+                code = 0;
+            } else {
+                code = genre.code;
+            }
+            var countData = webix.ajax().sync().post("get/word/count/genre/" + code);
+            var statusCode = countData.status;
+            var result = 0;
+            if (statusCode === 200) {
+                result = countData.response;
+            }
+            return result;
+        }
+
+        function getWordCountInGenre(genre) {
+            return getWordCountInGenreFromServer(genre);
+        }
+
+        function getGenreData() {
+            var result = [];
+            for(var key in sg.genre) {
+                if (sg.genre.hasOwnProperty(key)) {
+                    var genre = sg.genre[key];
+                    var count = getWordCountInGenre(genre);
+                    result.push({id:genre.id, icon:"support", value : genre.name, badge:count});
+                }
+            }
+
+            return result;
         }
 
         var topToolbar = {
@@ -147,7 +180,7 @@
                         if (sg.context.currentMenuId !== "show_word") {
                             $$("body_layout").removeView("side_menu");
                             $$("body_layout").addView(wordListMenu, 0);
-                            $$("side_menu").select(1);
+                            $$("side_menu").select(sg.genre.poetry.id);
                         }
 
                         sg.context.currentMenuId = "show_word";
@@ -240,10 +273,10 @@
             }
         };
 
-        var nounDataTable = makeWordDataTable(sg.word.noun.id);
-        var verbDataTable = makeWordDataTable(sg.word.verb.id);
-        var adverbDataTable = makeWordDataTable(sg.word.adverb.id);
-        var adjectiveDataTable = makeWordDataTable(sg.word.adjective.id);
+        var nounDataTable = makeWordDataTable(sg.word.noun);
+        var verbDataTable = makeWordDataTable(sg.word.verb);
+        var adverbDataTable = makeWordDataTable(sg.word.adverb);
+        var adjectiveDataTable = makeWordDataTable(sg.word.adjective);
 
         var wordLists = {
             cells:[
@@ -275,15 +308,9 @@
                 }
             }
         };
+
         var wordListMenu = {
-            id: "side_menu", view: "menu", layout: "y", select: true, width: 200, data: [
-                {id: 1, icon: "support", value: "시", badge: "12"},
-                {id: 2, icon: "support", value: "동시", badge: "27"},
-                {id: 3, icon: "support", value: "소설", badge: "99"},
-                {id: 4, icon: "support", value: "수필", badge: "99"},
-                {id: 5, icon: "support", value: "동화", badge: "99"},
-                {id: 6, icon: "support", value: "기타", badge: "99"}
-            ],
+            id: "side_menu", view: "menu", layout: "y", select: true, width: 200, data: getGenreData(),
             on: {
                 onMenuItemClick: function (id) {
                     console.log(id);
@@ -318,7 +345,7 @@
             ]
         });
 
-        $$("side_menu").select(1);
+        $$("side_menu").select(sg.genre.poetry.id);
         $$("word_input_title").setValue(sg.word.noun.name);
     </script>
 {% endblock %}
