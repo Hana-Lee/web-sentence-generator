@@ -105,7 +105,7 @@
             }).show();
         }
 
-        function makeWordDataTable(word) {
+        function makeWordDataTable(word, genre) {
             return {
                 id: word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
@@ -113,13 +113,13 @@
                     {id: "word", header: "단어", sort:"string", fillspace: true},
                     {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 200, css: "t_center"}
                 ],
-                data: getWordData(word),
+                data: getWordData(word, genre),
                 select:true
             }
         }
 
-        function getWordDataFromServer(word) {
-            var jsonData = webix.ajax().sync().post("get/word/" + word.code);
+        function getWordDataFromServer(word, genre) {
+            var jsonData = webix.ajax().sync().post("get/word/" + word.code + "/" + genre.code);
             var statusCode = jsonData.status;
             var result = [];
             if (statusCode === 200) {
@@ -134,8 +134,8 @@
             return result;
         }
 
-        function getWordData(word) {
-            return getWordDataFromServer(word);
+        function getWordData(word, genre) {
+            return getWordDataFromServer(word, genre);
         }
 
         function getWordCountInGenreFromServer(genre) {
@@ -169,6 +169,17 @@
             }
 
             return result;
+        }
+
+        function updateWordDataTable(genre) {
+            var availableWords = sg.word;
+            for(var key in availableWords) {
+                if (availableWords.hasOwnProperty(key)) {
+                    var wordData = getWordData(availableWords[key], genre);
+                    $$(availableWords[key].id).clearAll();
+                    $$(availableWords[key].id).parse(wordData);
+                }
+            }
         }
 
         var topToolbar = {
@@ -273,10 +284,10 @@
             }
         };
 
-        var nounDataTable = makeWordDataTable(sg.word.noun);
-        var verbDataTable = makeWordDataTable(sg.word.verb);
-        var adverbDataTable = makeWordDataTable(sg.word.adverb);
-        var adjectiveDataTable = makeWordDataTable(sg.word.adjective);
+        var nounDataTable = makeWordDataTable(sg.word.noun, sg.genre.poetry);
+        var verbDataTable = makeWordDataTable(sg.word.verb, sg.genre.poetry);
+        var adverbDataTable = makeWordDataTable(sg.word.adverb, sg.genre.poetry);
+        var adjectiveDataTable = makeWordDataTable(sg.word.adjective, sg.genre.poetry);
 
         var wordLists = {
             cells:[
@@ -313,7 +324,8 @@
             id: "side_menu", view: "menu", layout: "y", select: true, width: 200, data: getGenreData(),
             on: {
                 onMenuItemClick: function (id) {
-                    console.log(id);
+                    var selectedGenre = sg.genre[id];
+                    updateWordDataTable(selectedGenre);
                 }
             }
         };
