@@ -9,9 +9,11 @@
 
     {% block stylesheets %}{% endblock %}
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    {#<script src="{{ asset('js/jquery/jquery-2.1.4.js') }}" type="text/javascript" charset="utf-8"></script>#}
     <script src="{{ asset('js/webix/codebase/webix.js') }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ asset('js/webix/codebase/i18n/ko.js') }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ asset('js/jquery/jquery-2.1.4.min.js') }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ asset('js/jquery.blockUI.js') }}" type="text/javascript" charset="utf-8"></script>
 </head>
 <body>
 {% block body %}{% endblock %}

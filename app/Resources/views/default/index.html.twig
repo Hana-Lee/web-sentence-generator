@@ -62,6 +62,9 @@
         .checked_row {
             background-color: #DDFFDD;
         }
+        .webix_cell p {
+            margin: 0;
+        }
     </style>
 {% endblock %}
 
@@ -89,14 +92,20 @@
             nursery_rime : {id:"nursery_rime", name:"동시", code:1},
             novel : {id:"novel", name:"소설", code:2},
             essay : {id:"essay", name:"수필", code:3},
-            fairy_tail : {id: "fairy_tail", name : "동화", code:4},
-            etc : {id:"etc", name:"기타", code:5}
+            fairy_tail : {id: "fairy_tail", name : "동화", code:4}
         };
 
         var sgContext = {
             currentMenuId : "show_word"
         };
 
+        var sgRateCharacter = {
+            1 : "★☆☆☆☆",
+            2 : "★★☆☆☆",
+            3 : "★★★☆☆",
+            4 : "★★★★☆",
+            5 : "★★★★★"
+        };
 
         sg.context = sgContext;
         sg.word = sgWord;
@@ -104,6 +113,7 @@
         sg.dataTable = {
             prefix : "dt_"
         };
+        sg.rateCharacter = sgRateCharacter;
 
         function showLovePopup() {
             webix.ui({
@@ -148,6 +158,38 @@
             }
         }
 
+        function makeFavoriteDataTable(favoriteType, rate) {
+            return {
+                id: sg.dataTable.prefix + favoriteType, view: "datatable", columns: [
+                    {id: "number", header: "No.", width: 50, css: "t_center"},
+                    {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
+                    {id: "sentence", header: "문장", sort:"string", fillspace: true},
+                    {id: "star", header: "평가", sort:"string", width: 100, css: "t_center"},
+                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 200, css: "t_center"}
+                ],
+                data: getFavoriteItemByRate(rate),
+                schema:{
+                    $change:function(item) {
+                        console.log(item);
+                    }
+                },
+                hover:"word_datatable_row_hover",
+                select:false,
+                on : {
+                    onItemClick : function(id, event, node) {
+                        var item = this.getItem(id.row);
+                        item.status = !item.status;
+                        if (item.status) {
+                            this.addRowCss(id.row, "checked_row");
+                        } else {
+                            this.removeRowCss(id.row, "checked_row");
+                        }
+                        this.refresh(id.row);
+                    }
+                }
+            }
+        }
+
         function getWordDataFromServer(word, genre) {
             var jsonData = webix.ajax().sync().post("get/word/" + word.code + "/" + genre.code);
             var statusCode = jsonData.status;
@@ -170,13 +212,7 @@
         }
 
         function getWordCountInGenreFromServer(genre) {
-            var code;
-            if (isUndefined(genre)) {
-                code = 0;
-            } else {
-                code = genre.code;
-            }
-            var countData = webix.ajax().sync().post("get/word/count/genre/" + code);
+            var countData = webix.ajax().sync().post("get/word/count/genre/" + genre.code);
             var statusCode = countData.status;
             var result = 0;
             if (statusCode === 200) {
@@ -260,49 +296,146 @@
             return result;
         }
 
+        function getFavoriteRateItemCount(rate) {
+            var itemCountResult = webix.ajax().sync().post("get/favorite/rate/count/" + rate);
+            var result = 0;
+            if (itemCountResult.status === 200) {
+                result = itemCountResult.response;
+            }
+
+            return result;
+        }
+
+        function getFavoriteCategoriesFromServer() {
+            var favoriteCategoriesResult = webix.ajax().sync().post("get/favorite/category");
+            var result = [];
+            if (favoriteCategoriesResult.status === 200) {
+                result = JSON.parse(favoriteCategoriesResult.response);
+
+                $(result).each(function(index, category) {
+                    category["value"] = category.name;
+                    category["icon"] = "support";
+                    category["badge"] = getFavoriteCategoryItemCount(category.id);
+
+                    result[index] = category;
+                });
+            }
+
+            return result;
+        }
+
+        function getFavoriteCategoryItemCount(categoryId) {
+            var favoriteCategoryItemCountResult = webix.ajax().sync().post("get/favorite/category/item/count/" + categoryId);
+            var result = 0;
+            if (favoriteCategoryItemCountResult.status === 200) {
+                result = favoriteCategoryItemCountResult.response;
+            }
+
+            return result;
+        }
+
+        function getFavoriteItemByRate(rate) {
+            var favoriteRateItemResult = webix.ajax().sync().post("get/favorite/rate/item/" + rate);
+
+            var result = [];
+            if (favoriteRateItemResult.status === 200) {
+                result = JSON.parse(favoriteRateItemResult.response);
+
+                var count = 1;
+                $(result).each(function(index, favorite) {
+                    favorite["status"] = 0;
+                    favorite["created"] = new Date(Number(favorite["created"]));
+                    favorite["number"] = count++;
+                    var rateValue = favorite["rate"];
+                    favorite["star"] = sg.rateCharacter[rateValue];
+
+                    result[index] = favorite;
+                });
+            }
+
+            return result;
+        }
+
+        function showWaitDialog() {
+            $.blockUI({ css: {
+                border: 'none',
+                padding: '15px',
+                backgroundColor: '#000',
+                '-webkit-border-radius': '10px',
+                '-moz-border-radius': '10px',
+                opacity: .5,
+                color: '#fff'
+            } });
+//            $$("main_container").disable();
+//            $$("main_container").showProgress({type:"icon", delay:1, icon:"spinner"});
+        }
+
+        function hideWaitDialog() {
+            $.unblockUI();
+//            $$("main_container").enable();
+//            $$("main_container").hideProgress();
+        }
+
         var topToolbar = {
             id:"toolbar", view:"toolbar",cols:[
                 { view:"label", template: "Sentence Generator 시어 생성기 사랑합니다♥"},
                 {
                     id:"show_word", view:"button", type:"icon", icon:"envelope", label:"단어보기", width:100, align:"left", on:{
                         onItemClick:function(id) {
+//                            showWaitDialog();
                             if (sg.context.currentMenuId !== "show_word") {
                                 $$("body_layout").removeView("side_menu");
-                                $$("body_layout").addView(wordListMenu, 0);
+                                $$("body_layout").addView(webix.copy(wordListMenu), 0);
                                 $$("side_menu").select(sg.genre.poetry.id);
                             }
 
                             sg.context.currentMenuId = "show_word";
+
+//                            hideWaitDialog();
                         }
                     }
                 },
                 {
                     id:"show_favorite", view:"button", type:"icon", icon:"users", label:"즐겨찾기", width:100, align:"left", on:{
                         onItemClick:function(id) {
+                            // TODO : 데이터 가지고 오는 동안 잠시 기다려주세요 띄워주는 기능 추가 하기
+                            // (현재는 첫줄에 함수 호출 하여도 데이터를 다 가지고 올 때까지 다이얼로그가 안뜸)
+
+//                            showWaitDialog();
+
                             if (sg.context.currentMenuId !== "show_favorite") {
                                 $$("body_layout").removeView("side_menu");
-                                $$("body_layout").addView(favoriteMenu, 0);
-                                $$("side_menu").select(1);
+                                $$("body_layout").addView(webix.copy(makeFavoriteMenu()), 0);
                             }
 
                             sg.context.currentMenuId = "show_favorite";
+
+//                            hideWaitDialog();
                         }
                     }
                 },
                 {
                     id:"show_generate", view:"button", type:"icon", icon:"cog", label:"문장생성", width:100, align:"left", on:{
                         onItemClick:function(id) {
+//                            showWaitDialog();
+                            console.log("show generate");
                             if (sg.context.currentMenuId !== "show_generate") {
                                 $$("body_layout").removeView("side_menu");
-                                $$("body_layout").addView(generateMenu, 0);
-                                $$("side_menu").select(1);
+                                $$("body_layout").addView(webix.copy(makeGenerateMenu()), 0);
                             }
 
                             sg.context.currentMenuId = "show_generate";
+
+//                            hideWaitDialog();
                         }
                     }
                 }
-            ]
+            ],
+            on: {
+                onChange:function() {
+                    console.log(arguments);
+                }
+            }
         };
 
         var wordInputForm = {
@@ -346,7 +479,6 @@
                 onBeforeTabClick: function(id, event) {
                 },
                 onChange: function(newValue, oldValue) {
-                    console.log(newValue);
                     var wordInputTitle = $$("word_input_title");
                     var $wordInputTitle = jQuery("div[view_id='word_input_form']");
                     $wordInputTitle.removeClass(oldValue).addClass(newValue);
@@ -369,6 +501,7 @@
         var adjectiveDataTable = makeWordDataTable(sg.word.adjective, sg.genre.poetry);
 
         var wordLists = {
+            id:"data_table_cells",
             cells:[
                 nounDataTable,
                 verbDataTable,
@@ -377,30 +510,73 @@
             ]
         };
 
-        var favoriteMenu = {
-            id: "side_menu", view: "menu", layout: "y", select:true, width: 200, data: [
-                {id: 1, icon: "support", value: "♥ 이름별 보기", badge: "12"},
-                {id: 2, icon: "support", value: "★ 평가별 보기", badge: "27"}
-            ],
-            on: {
-                onMenuItemClick: function (id) {
-                    console.log(id);
+        function makeFavoriteRateMenu() {
+            return {
+                id: "fav_rate_menu", view: "menu", layout: "y", select: true, width: 240, data: [
+                    {id: 5, icon: "support", value: "♥♥♥♥♥", badge: getFavoriteRateItemCount(5)},
+                    {id: 4, icon: "support", value: "♥♥♥♥♡", badge: getFavoriteRateItemCount(4)},
+                    {id: 3, icon: "support", value: "♥♥♥♡♡", badge: getFavoriteRateItemCount(3)},
+                    {id: 2, icon: "support", value: "♥♥♡♡♡", badge: getFavoriteRateItemCount(2)},
+                    {id: 1, icon: "support", value: "♥♡♡♡♡", badge: getFavoriteRateItemCount(1)}
+                ],
+                on: {
+                    onMenuItemClick: function (id) {
+                        // TODO : 클릭시 데이터 테이블 새로 만들고 DB로부터 가지고온 데이터 넣기.
+//                        $$("content_container").removeView(sg.dataTable.prefix + "tabbar");
+//                        $$("content_container").removeView("data_table_cells");
+//
+//                        $$("content_container").addView(makeFavoriteDataTable("rate", 5));
+//                        makeFavoriteDataTable("rate", 5);
+                        var result = getFavoriteItemByRate(5);
+                        var wordInputTitle = $$("word_input_title");
+                        wordInputTitle.setValue(result[0].sentence);
+                        $$("dt_noun").getItem(1145).word = result[0].sentence;
+                        console.log(id);
+                    }
                 }
-            }
-        };
-        var generateMenu = {
-            id: "side_menu", view: "menu", layout: "y", select:true, width: 200, data: [
-                {id: 1, icon: "support", value: "문장생성", badge: "12"}
-            ],
-            on: {
-                onMenuItemClick: function (id) {
-                    console.log(id);
+            };
+        }
+
+        function makeFavoriteCategoryMenu() {
+            return {
+                id: "fav_name_menu", view: "menu", layout: "y", select:true, width: 240, scroll:"y",
+                data: getFavoriteCategoriesFromServer(),
+                on: {
+                    onMenuItemClick: function (id) {
+                        console.log(id);
+                    }
                 }
-            }
-        };
+            };
+        }
+
+        function makeFavoriteMenu() {
+            return {
+                id: "side_menu", view: "tabview", width: 242, cells: [
+                    {
+                        id: "fav_name", header: "이름별", body : makeFavoriteCategoryMenu()
+                    },
+                    {
+                        id: "fav_rate", header: "평가별", body : makeFavoriteRateMenu()
+                    }
+                ]
+            };
+        }
+
+        function makeGenerateMenu() {
+            return {
+                id: "side_menu", view: "menu", layout: "y", select:true, width: 240, data: [
+                    {id: 1, icon: "support", value: "문장생성", badge: "12"}
+                ],
+                on: {
+                    onMenuItemClick: function (id) {
+                        console.log(id);
+                    }
+                }
+            };
+        }
 
         var wordListMenu = {
-            id: "side_menu", view: "menu", layout: "y", select: true, width: 200, data: getGenreData(),
+            id: "side_menu", view: "menu", layout: "y", select: true, width: 240, data: getGenreData(),
             on: {
                 onMenuItemClick: function (id) {
                     var selectedItem = this.getItem(id);
@@ -421,7 +597,7 @@
                 wordListMenu,
                 {$template: "Spacer", width: 10},
                 {
-                    rows: [
+                    id:"content_container", rows: [
                         wordInputForm,
                         {$template: "Spacer", height: 10},
                         wordListTabBar,
@@ -432,7 +608,7 @@
         };
 
         webix.ui({
-            type:"wide", css:"main_container", cols:[
+            id:"main_container", type:"wide", css:"main_container", cols:[
                 {
                     type: "space", width:960, rows: [
                         topToolbar,
@@ -441,6 +617,8 @@
                 }
             ]
         });
+
+        webix.extend($$("main_container"), webix.ProgressBar);
 
         $$("side_menu").select(sg.genre.poetry.id);
         $$("word_input_title").setValue(sg.word.noun.name);
