@@ -53,6 +53,15 @@
         .webix_ss_header .webix_hs_center table td div.webix_hcell {
             text-align: center;
         }
+        .new_word_value {
+            background-color:#FFAAAA;
+        }
+        .word_datatable_row_hover {
+            background-color:#F0DCB6;
+        }
+        .checked_row {
+            background-color: #DDFFDD;
+        }
     </style>
 {% endblock %}
 
@@ -109,12 +118,30 @@
             return {
                 id: word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
-                    {id: "noun_checkbox", header: {content: "masterCheckbox"}, checkValue: "on", uncheckValue: "off", template: "{common.checkbox()}", width: 40},
+                    {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
                     {id: "word", header: "단어", sort:"string", fillspace: true},
                     {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 200, css: "t_center"}
                 ],
                 data: getWordData(word, genre),
-                select:true
+                schema:{
+                    $change:function(item) {
+                        console.log(item);
+                    }
+                },
+                hover:"word_datatable_row_hover",
+                select:false,
+                on : {
+                    onItemClick : function(id, event, node) {
+                        var item = this.getItem(id.row);
+                        item.status = !item.status;
+                        if (item.status) {
+                            this.addRowCss(id.row, "checked_row");
+                        } else {
+                            this.removeRowCss(id.row, "checked_row");
+                        }
+                        this.refresh(id.row);
+                    }
+                }
             }
         }
 
@@ -126,6 +153,7 @@
                 result = JSON.parse(jsonData["response"]);
                 var count = 1;
                 $(result).each(function(index, value) {
+                    value["status"] = 0;
                     value["number"] = count++;
                     value["created"] = new Date(Number(value["created"]));
                     result[index] = value;
@@ -182,47 +210,53 @@
             }
         }
 
+        function makeNewWordData(newWordValue) {
+            var dateObj = new Date();
+            var currentTime = dateObj.getTime();
+            return {id:currentTime, status:0, number: 0, word:newWordValue, wordType:0, genreType:0, created:dateObj, backup:0};
+        }
+
         var topToolbar = {
             id:"toolbar", view:"toolbar",cols:[
                 { view:"label", template: "Sentence Generator 시어 생성기 사랑합니다♥"},
                 {
                     id:"show_word", view:"button", type:"icon", icon:"envelope", label:"단어보기", width:100, align:"left", on:{
-                    onItemClick:function(id) {
-                        if (sg.context.currentMenuId !== "show_word") {
-                            $$("body_layout").removeView("side_menu");
-                            $$("body_layout").addView(wordListMenu, 0);
-                            $$("side_menu").select(sg.genre.poetry.id);
-                        }
+                        onItemClick:function(id) {
+                            if (sg.context.currentMenuId !== "show_word") {
+                                $$("body_layout").removeView("side_menu");
+                                $$("body_layout").addView(wordListMenu, 0);
+                                $$("side_menu").select(sg.genre.poetry.id);
+                            }
 
-                        sg.context.currentMenuId = "show_word";
+                            sg.context.currentMenuId = "show_word";
+                        }
                     }
-                }
                 },
                 {
                     id:"show_favorite", view:"button", type:"icon", icon:"users", label:"즐겨찾기", width:100, align:"left", on:{
-                    onItemClick:function(id) {
-                        if (sg.context.currentMenuId !== "show_favorite") {
-                            $$("body_layout").removeView("side_menu");
-                            $$("body_layout").addView(favoriteMenu, 0);
-                            $$("side_menu").select(1);
-                        }
+                        onItemClick:function(id) {
+                            if (sg.context.currentMenuId !== "show_favorite") {
+                                $$("body_layout").removeView("side_menu");
+                                $$("body_layout").addView(favoriteMenu, 0);
+                                $$("side_menu").select(1);
+                            }
 
-                        sg.context.currentMenuId = "show_favorite";
+                            sg.context.currentMenuId = "show_favorite";
+                        }
                     }
-                }
                 },
                 {
                     id:"show_generate", view:"button", type:"icon", icon:"cog", label:"문장생성", width:100, align:"left", on:{
-                    onItemClick:function(id) {
-                        if (sg.context.currentMenuId !== "show_generate") {
-                            $$("body_layout").removeView("side_menu");
-                            $$("body_layout").addView(generateMenu, 0);
-                            $$("side_menu").select(1);
-                        }
+                        onItemClick:function(id) {
+                            if (sg.context.currentMenuId !== "show_generate") {
+                                $$("body_layout").removeView("side_menu");
+                                $$("body_layout").addView(generateMenu, 0);
+                                $$("side_menu").select(1);
+                            }
 
-                        sg.context.currentMenuId = "show_generate";
+                            sg.context.currentMenuId = "show_generate";
+                        }
                     }
-                }
                 }
             ]
         };
@@ -233,21 +267,27 @@
                 {
                     cols: [
                         {
-                            view: "text", label: "", on:{
-                            onKeyPress: function(keyCode, event) {
-                                if (keyCode === 13) {
-                                    showLovePopup();
+                            id: "new_word_input", view: "text", label: "", on:{
+                                onKeyPress: function(keyCode, event) {
+                                    if (keyCode === 13) {
+                                        showLovePopup();
+                                    }
                                 }
                             }
-                        }
                         },
                         {
                             view: "button", value: "입력", type: "form", width: 100, on:{
-                            onItemClick: function(id, event) {
-                                showLovePopup();
-                                return false;
+                                onItemClick: function(id, event) {
+                                    var newWordValue = $$("new_word_input").getValue();
+                                    if (newWordValue !== "") {
+                                        var currentTabBarItemId = $$("tabbar").getValue();
+                                        var newData = makeNewWordData(newWordValue);
+                                        $$(currentTabBarItemId).add(newData, 0);
+                                        $$(currentTabBarItemId).addRowCss(newData.id, "new_word_value");
+                                    }
+                                    return false;
+                                }
                             }
-                        }
                         }
                     ]
                 }
