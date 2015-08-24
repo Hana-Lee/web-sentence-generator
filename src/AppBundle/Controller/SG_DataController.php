@@ -62,7 +62,7 @@ class SG_DataController extends Controller
 
     /**
      * @Route("/get/favorite/count", defaults={"favoriteType" = 0})
-     * @Route("/get/favorite/count/{$favoriteType}")
+     * @Route("/get/favorite/count/{favoriteType}")
      *
      * @param $favoriteType
      * @return Response
@@ -79,6 +79,36 @@ class SG_DataController extends Controller
         }
 
         return new Response($favoriteCount);
+    }
+
+    /**
+     * @Route("/add/word/{wordType}/{genreType}/{newWord}/{created}")
+     *
+     * @param $wordType
+     * @param $genreType
+     * @param $newWord
+     * @param $created
+     * @return Response
+     */
+    public function addNewWord($wordType, $genreType, $newWord, $created)
+    {
+        $addResult = $this->addNewWordToDatabase($wordType, $genreType, $newWord, $created);
+        $serializer = new Serializer($this->getManager());
+        $newWordArray = $serializer->serialize($addResult);
+        return new Response(json_encode($newWordArray));
+    }
+
+    private function objectToArrayConvert($targetObject)
+    {
+        $newArray = array();
+        $nValue = get_object_vars($targetObject);
+        $nValue = (array) $targetObject;
+        foreach ($targetObject as $key => $value)
+        {
+            $newArray[$key] = $value;
+        }
+
+        return $newArray;
     }
 
     private function fetchWordListByTypeAndGenre($wordType, $genreType)
@@ -131,5 +161,74 @@ class SG_DataController extends Controller
             ->getQuery()->getSingleScalarResult();
 
         return $count;
+    }
+
+    private function addNewWordToDatabase($wordType, $genreType, $newWord, $created)
+    {
+        $newWordObj = new Word();
+        $newWordObj->setWord($newWord);
+        $newWordObj->setCreated($created);
+        $newWordObj->setBackup(0);
+        $newWordObj->setGenreType($genreType);
+        $newWordObj->setWordType($wordType);
+
+        $this->getManager()->persist($newWordObj);
+        $this->getManager()->flush();
+
+        return $newWordObj;
+    }
+}
+
+/**
+ * Class Serializer
+ *
+ * @author Steffen Brem
+ * @link <a href="http://stackoverflow.com/a/17503598">
+ */
+class Serializer
+{
+    /**
+     * @var \Doctrine\ORM\EntityManager
+     */
+    private $_em;
+
+    /**
+     * Constructor
+     *
+     * @param \Doctrine\ORM\EntityManager $em
+     */
+    public function __construct(\Doctrine\ORM\EntityManager $em)
+    {
+        $this->_em = $em;
+    }
+
+    /**
+     * Serialize entity to array
+     *
+     * @param $entityObject
+     * @return array
+     */
+    public function serialize($entityObject)
+    {
+        $data = array();
+
+        $className = get_class($entityObject);
+        $metaData = $this->_em->getClassMetadata($className);
+
+        foreach ($metaData->fieldMappings as $field => $mapping)
+        {
+            $method = "get" . ucfirst($field);
+            $data[$field] = call_user_func(array($entityObject, $method));
+        }
+
+        foreach ($metaData->associationMappings as $field => $mapping)
+        {
+            // Sort of entity object
+            $object = $metaData->reflFields[$field]->getValue($entityObject);
+
+            $data[$field] = $this->serialize($object);
+        }
+
+        return $data;
     }
 }

@@ -13,16 +13,16 @@
         .webix_view.webix_form.word_input {
             border-radius: 6px;
         }
-        .word_input.noun {
+        .word_input.dt_noun {
             background-color: #CD812B;
         }
-        .word_input.verb {
+        .word_input.dt_verb {
             background-color: #F17075;
         }
-        .word_input.adverb {
+        .word_input.dt_adverb {
             background-color: #7B6A97;
         }
-        .word_input.adjective {
+        .word_input.dt_adjective {
             background-color: #608F63;
         }
         .word_input .webix_el_label {
@@ -101,6 +101,9 @@
         sg.context = sgContext;
         sg.word = sgWord;
         sg.genre = sgGenre;
+        sg.dataTable = {
+            prefix : "dt_"
+        };
 
         function showLovePopup() {
             webix.ui({
@@ -116,7 +119,7 @@
 
         function makeWordDataTable(word, genre) {
             return {
-                id: word.id, view: "datatable", columns: [
+                id: sg.dataTable.prefix + word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
                     {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
                     {id: "word", header: "단어", sort:"string", fillspace: true},
@@ -204,8 +207,17 @@
             for(var key in availableWords) {
                 if (availableWords.hasOwnProperty(key)) {
                     var wordData = getWordData(availableWords[key], genre);
-                    $$(availableWords[key].id).clearAll();
-                    $$(availableWords[key].id).parse(wordData);
+                    $$(sg.dataTable.prefix + availableWords[key].id).clearAll();
+                    $$(sg.dataTable.prefix + availableWords[key].id).parse(wordData);
+                }
+            }
+        }
+
+        function clearAllWordDataTable() {
+            var availableWords = sg.word;
+            for(var key in availableWords) {
+                if (availableWords.hasOwnProperty(key)) {
+                    $$(sg.dataTable.prefix + availableWords[key].id).clearAll();
                 }
             }
         }
@@ -214,6 +226,38 @@
             var dateObj = new Date();
             var currentTime = dateObj.getTime();
             return {id:currentTime, status:0, number: 0, word:newWordValue, wordType:0, genreType:0, created:dateObj, backup:0};
+        }
+
+        function addNewWord(word, genre) {
+            var newWordValue = $$("new_word_input").getValue();
+            if (newWordValue !== "") {
+                var currentTabBarItemId = $$(sg.dataTable.prefix + "tabbar").getValue();
+                var currentWordId = currentTabBarItemId.replace(sg.dataTable.prefix, "");
+                var currentWord = sg.word[currentWordId];
+                var currentGenreId = $$("side_menu").getSelectedItem().id;
+                var currentGenre = sg.genre[currentGenreId];
+
+                var newData = addNewWordToServer(currentWord, currentGenre, newWordValue);
+                $$(currentTabBarItemId).add(newData, 0);
+                $$(currentTabBarItemId).addRowCss(newData.id, "new_word_value");
+            }
+        }
+
+        function addNewWordToServer(word, genre, newWord) {
+            var dateObj = new Date();
+            var currentTime = dateObj.getTime();
+            var newWordResponseData = webix.ajax().sync().post("add/word/" + word.code + "/" + genre.code + "/" + newWord + "/" + currentTime);
+            var result = {};
+            if (newWordResponseData.status === 200) {
+                var jsonData = JSON.parse(newWordResponseData.response);
+                jsonData["status"] = 0;
+                jsonData["number"] = 0;
+                jsonData["created"] = new Date(Number(jsonData["created"]));
+
+                result = jsonData;
+            }
+
+            return result;
         }
 
         var topToolbar = {
@@ -262,7 +306,7 @@
         };
 
         var wordInputForm = {
-            view: "form", id: "word_input_form", css: "word_input noun", elements: [
+            view: "form", id: "word_input_form", css: "word_input " + sg.dataTable.prefix + "noun", elements: [
                 {id:"word_input_title", view: "label", label: "명사"},
                 {
                     cols: [
@@ -278,13 +322,7 @@
                         {
                             view: "button", value: "입력", type: "form", width: 100, on:{
                                 onItemClick: function(id, event) {
-                                    var newWordValue = $$("new_word_input").getValue();
-                                    if (newWordValue !== "") {
-                                        var currentTabBarItemId = $$("tabbar").getValue();
-                                        var newData = makeNewWordData(newWordValue);
-                                        $$(currentTabBarItemId).add(newData, 0);
-                                        $$(currentTabBarItemId).addRowCss(newData.id, "new_word_value");
-                                    }
+                                    addNewWord();
                                     return false;
                                 }
                             }
@@ -295,11 +333,11 @@
         };
 
         var wordListTabBar = {
-            id:"tabbar", view: "tabbar", value:sg.word.noun.id, multiview:true, options: [
-                {id: sg.word.noun.id, value: sg.word.noun.name},
-                {id: sg.word.verb.id, value: sg.word.verb.name},
-                {id: sg.word.adverb.id, value: sg.word.adverb.name},
-                {id: sg.word.adjective.id, value: sg.word.adjective.name}
+            id:sg.dataTable.prefix + "tabbar", view: "tabbar", value:sg.dataTable.prefix + sg.word.noun.id, multiview:true, options: [
+                {id: sg.dataTable.prefix + sg.word.noun.id, value: sg.word.noun.name},
+                {id: sg.dataTable.prefix + sg.word.verb.id, value: sg.word.verb.name},
+                {id: sg.dataTable.prefix + sg.word.adverb.id, value: sg.word.adverb.name},
+                {id: sg.dataTable.prefix + sg.word.adjective.id, value: sg.word.adjective.name}
             ],
             on: {
                 onAfterTabClick: function(id, event) {
@@ -308,16 +346,17 @@
                 onBeforeTabClick: function(id, event) {
                 },
                 onChange: function(newValue, oldValue) {
+                    console.log(newValue);
                     var wordInputTitle = $$("word_input_title");
                     var $wordInputTitle = jQuery("div[view_id='word_input_form']");
                     $wordInputTitle.removeClass(oldValue).addClass(newValue);
-                    if (newValue == sg.word.noun.id) {
+                    if (newValue == sg.dataTable.prefix + sg.word.noun.id) {
                         wordInputTitle.setValue(sg.word.noun.name);
-                    } else if (newValue == sg.word.verb.id) {
+                    } else if (newValue == sg.dataTable.prefix + sg.word.verb.id) {
                         wordInputTitle.setValue(sg.word.verb.name);
-                    } else if (newValue == sg.word.adverb.id) {
+                    } else if (newValue == sg.dataTable.prefix + sg.word.adverb.id) {
                         wordInputTitle.setValue(sg.word.adverb.name);
-                    } else if (newValue == sg.word.adjective.id) {
+                    } else if (newValue == sg.dataTable.prefix + sg.word.adjective.id) {
                         wordInputTitle.setValue(sg.word.adjective.name);
                     }
                 }
@@ -364,8 +403,14 @@
             id: "side_menu", view: "menu", layout: "y", select: true, width: 200, data: getGenreData(),
             on: {
                 onMenuItemClick: function (id) {
-                    var selectedGenre = sg.genre[id];
-                    updateWordDataTable(selectedGenre);
+                    var selectedItem = this.getItem(id);
+                    var badgeValue = Number(selectedItem.badge);
+                    if (badgeValue > 0) {
+                        var selectedGenre = sg.genre[id];
+                        updateWordDataTable(selectedGenre);
+                    } else {
+                        clearAllWordDataTable();
+                    }
                 }
             }
         };
