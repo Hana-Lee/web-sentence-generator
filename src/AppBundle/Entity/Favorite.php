@@ -20,40 +20,160 @@ class Favorite
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    protected $id;
+    private $id;
 
     /**
      * @ORM\Column(name="parent", type="integer")
      */
-    protected $parentId;
+    private $parentId;
 
     /**
      * @ORM\Column(type="text")
      */
-    protected $sentence;
+    private $sentence;
 
     /**
      * @ORM\Column(name="genre", type="integer")
      */
-    protected $genreType;
+    private $genreType;
 
     /**
      * @ORM\Column(type="integer")
      */
-    protected $rate;
+    private $rate;
 
     /**
      * @ORM\Column(type="integer")
      */
-    protected $enabled;
+    private $enabled;
 
     /**
      * @ORM\Column(type="text")
      */
-    protected $created;
+    private $created;
 
     /**
      * @ORM\Column(type="integer")
      */
-    protected $backup;
+    private $backup;
+
+    /**
+     * @return mixed
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getParentId()
+    {
+        return $this->parentId;
+    }
+
+    /**
+     * @param mixed $parentId
+     */
+    public function setParentId($parentId)
+    {
+        $this->parentId = $parentId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSentence()
+    {
+        return $this->sentence;
+    }
+
+    /**
+     * @param mixed $sentence
+     */
+    public function setSentence($sentence)
+    {
+        $this->sentence = $sentence;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getGenreType()
+    {
+        return $this->genreType;
+    }
+
+    /**
+     * @param mixed $genreType
+     */
+    public function setGenreType($genreType)
+    {
+        $this->genreType = $genreType;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRate()
+    {
+        return $this->rate;
+    }
+
+    /**
+     * @param mixed $rate
+     */
+    public function setRate($rate)
+    {
+        $this->rate = $rate;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * @param mixed $enabled
+     */
+    public function setEnabled($enabled)
+    {
+        $this->enabled = $enabled;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCreated()
+    {
+        return $this->created;
+    }
+
+    /**
+     * @param mixed $created
+     */
+    public function setCreated($created)
+    {
+        $this->created = $created;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBackup()
+    {
+        return $this->backup;
+    }
+
+    /**
+     * @param mixed $backup
+     */
+    public function setBackup($backup)
+    {
+        $this->backup = $backup;
+    }
 }

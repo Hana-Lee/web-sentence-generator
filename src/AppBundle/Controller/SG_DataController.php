@@ -7,7 +7,6 @@
  */
 namespace AppBundle\Controller;
 
-use Proxies\__CG__\AppBundle\Entity\Word;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,9 +39,9 @@ class SG_DataController extends Controller
      */
     public function wordAction($wordType, $genreType)
     {
-        $wordList = $this->fetchWordListByTypeAndGenre($wordType, $genreType);
+        $wordArray = $this->getWordRepository()->findByWordTypeAndGenreType($wordType, $genreType);
 
-        return new Response(json_encode($wordList));
+        return new Response(json_encode($wordArray));
     }
 
     /**
@@ -53,7 +52,7 @@ class SG_DataController extends Controller
      */
     public function genreCountAction($genreType)
     {
-        $genreCount = $this->fetchGenreCount($genreType);
+        $genreCount = $this->getWordRepository()->getCountByGenreType($genreType);
 
         return new Response($genreCount);
     }
@@ -64,9 +63,9 @@ class SG_DataController extends Controller
      * @param $rate
      * @return Response
      */
-    public function favoriteRateItemCountAction($rate)
+    public function favoriteCountByRateAction($rate)
     {
-        $favoriteCount = $this->fetchFavoriteCountByRate($rate);
+        $favoriteCount = $this->getFavoriteRepository()->getCountByRate($rate);
 
         return new Response($favoriteCount);
     }
@@ -77,11 +76,11 @@ class SG_DataController extends Controller
      * @param $categoryId
      * @return Response
      */
-    public function favoriteCategoryItemCountAction($categoryId)
+    public function favoriteCountByParentIdAction($categoryId)
     {
-        $favoriteCategoryItemCount = $this->fetchFavoriteCategoryItemCountById($categoryId);
+        $favoriteCount = $this->getFavoriteRepository()->getCountByParentId($categoryId);
 
-        return new Response($favoriteCategoryItemCount);
+        return new Response($favoriteCount);
     }
 
     /**
@@ -90,25 +89,27 @@ class SG_DataController extends Controller
      * @return Response
      */
     public function favoriteCategoryAction() {
-        $fetchResult = $this->fetchFavoriteCategory();
+        $favoriteCategoryArray = $this->getFavoriteCategoryRepository()->findByEnabled();
 
-        return new Response(json_encode($fetchResult));
+        return new Response(json_encode($favoriteCategoryArray));
     }
 
     /**
-     * @Route("/add/word/{wordType}/{genreType}/{newWord}/{created}")
+     * @Route("/add/word/{wordType}/{genreType}/{newValue}/{created}")
      *
      * @param $wordType
      * @param $genreType
-     * @param $newWord
+     * @param $newValue
      * @param $created
      * @return Response
      */
-    public function addNewWordAction($wordType, $genreType, $newWord, $created)
+    public function addNewWordAction($wordType, $genreType, $newValue, $created)
     {
-        $addResult = $this->addNewWordToDatabase($wordType, $genreType, $newWord, $created);
-        $serializer = new Serializer($this->getManager());
-        $newWordArray = $serializer->serialize($addResult);
+        $newWord = $this->getWordRepository()->create($wordType, $genreType, $newValue, $created);
+
+        $serializer = new Serializer($this->getDoctrine()->getEntityManager());
+        $newWordArray = $serializer->serialize($newWord);
+
         return new Response(json_encode($newWordArray));
     }
 
@@ -118,11 +119,11 @@ class SG_DataController extends Controller
      * @param $rate
      * @return Response
      */
-    public function favoriteItemByRateAction($rate)
+    public function favoritesByRateAction($rate)
     {
-        $favoriteRateItemResult = $this->fetchFavoriteItemByRate($rate);
+        $favoriteArray = $this->getFavoriteRepository()->findByRate($rate);
 
-        return new Response(json_encode($favoriteRateItemResult));
+        return new Response(json_encode($favoriteArray));
     }
 
     /**
@@ -131,138 +132,26 @@ class SG_DataController extends Controller
      * @param $categoryId
      * @return Response
      */
-    public function favoriteItemByCategoryIdAction($categoryId)
+    public function favoritesByCategoryIdAction($categoryId)
     {
-        $favoriteItemResult = $this->fetchFavoriteItemByCategoryId($categoryId);
+        $favoriteArray = $this->getFavoriteRepository()->findByParentId($categoryId);
 
-        return new Response(json_encode($favoriteItemResult));
+        return new Response(json_encode($favoriteArray));
     }
 
-    private function fetchWordListByTypeAndGenre($wordType, $genreType)
+    private function getWordRepository()
     {
-        $words = $this->getManager()->createQueryBuilder()
-            ->select("w")
-            ->from("AppBundle:Word", "w")->where("w.wordType = :wordType")->andWhere("w.genreType = :genreType")
-            ->orderBy("w.word", "ASC")->addOrderBy("w.created", "DESC")
-            ->setParameters(array("wordType" => $wordType, "genreType" => $genreType))
-            ->getQuery()->getResult(Query::HYDRATE_ARRAY);
-        if (!$words)
-        {
-            return array();
-        }
-        else
-        {
-            return $words;
-        }
+        return $this->getDoctrine()->getManager()->getRepository("AppBundle:Word");
     }
 
-    private function fetchGenreCount($genreType)
+    private function getFavoriteRepository()
     {
-        $count = $this->getManager()->createQueryBuilder()
-            ->select("count(w)")
-            ->from("AppBundle:Word", "w")->where("w.genreType = :genreType")->setParameter("genreType", $genreType)
-            ->getQuery()->getSingleScalarResult();
-
-        return $count;
+        return $this->getDoctrine()->getManager()->getRepository("AppBundle:Favorite");
     }
 
-    private function getManager()
+    private function getFavoriteCategoryRepository()
     {
-        return $this->getDoctrine()->getEntityManager();
-    }
-
-    private function fetchFavoriteCategoryItemCountById($categoryId)
-    {
-        $count = $this->getManager()->createQueryBuilder()
-            ->select("count(f)")
-            ->from("AppBundle:Favorite", "f")->where("f.enabled = :enabled")->andWhere("f.parentId = :parentId")
-            ->setParameters(array("enabled" => 1, "parentId" => $categoryId))
-            ->getQuery()->getSingleScalarResult();
-
-        return $count;
-    }
-
-    private function fetchFavoriteCountByRate($rate)
-    {
-        $count = $this->getManager()->createQueryBuilder()
-            ->select("count(f)")
-            ->from("AppBundle:Favorite", "f")->where("f.enabled = :enabled")->andWhere("f.rate = :rate")
-            ->setParameters(array("enabled" => 1, "rate" => $rate))
-            ->getQuery()->getSingleScalarResult();
-
-        return $count;
-    }
-
-    private function addNewWordToDatabase($wordType, $genreType, $newWord, $created)
-    {
-        $newWordObj = new Word();
-        $newWordObj->setWord($newWord);
-        $newWordObj->setCreated($created);
-        $newWordObj->setBackup(0);
-        $newWordObj->setGenreType($genreType);
-        $newWordObj->setWordType($wordType);
-
-        $this->getManager()->persist($newWordObj);
-        $this->getManager()->flush();
-
-        return $newWordObj;
-    }
-
-    private function fetchFavoriteCategory()
-    {
-        $favoriteCategories = $this->getManager()->createQueryBuilder()
-            ->select("fc")
-            ->from("AppBundle:FavoriteCategory", "fc")->where("fc.enabled = :enabled")
-            ->setParameter("enabled", 1)
-            ->orderBy("fc.created", "DESC")
-            ->getQuery()->getResult(Query::HYDRATE_ARRAY);
-
-        if (!$favoriteCategories)
-        {
-            return array();
-        }
-        else
-        {
-            return $favoriteCategories;
-        }
-    }
-
-    private function fetchFavoriteItemByRate($rate)
-    {
-        $favoriteRateItem = $this->getManager()->createQueryBuilder()
-            ->select("f")
-            ->from("AppBundle:Favorite", "f")->where("f.enabled = :enabled")->andWhere("f.rate = :rate")
-            ->setParameters(array("enabled" => 1, "rate" => $rate))
-            ->orderBy("f.created", "DESC")
-            ->getQuery()->getResult(Query::HYDRATE_ARRAY);
-
-        if (!$favoriteRateItem)
-        {
-            return array();
-        }
-        else
-        {
-            return $favoriteRateItem;
-        }
-    }
-
-    private function fetchFavoriteItemByCategoryId($categoryId)
-    {
-        $favoriteItem = $this->getManager()->createQueryBuilder()
-            ->select("f")
-            ->from("AppBundle:Favorite", "f")->where("f.enabled = :enabled")->andWhere("f.parentId = :parentId")
-            ->setParameters(array("enabled" => 1, "parentId" => $categoryId))
-            ->orderBy("f.created", "DESC")
-            ->getQuery()->getResult(Query::HYDRATE_ARRAY);
-
-        if (!$favoriteItem)
-        {
-            return array();
-        }
-        else
-        {
-            return $favoriteItem;
-        }
+        return $this->getDoctrine()->getManager()->getRepository("AppBundle:FavoriteCategory");
     }
 }
 

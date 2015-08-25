@@ -10,45 +10,59 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\WordRepository")
  * @ORM\Table(name="sg_word")
  */
 class Word
 {
     /**
+     * @var integer
+     *
      * @ORM\Column(name="_id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    protected $id;
+    private $id;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
-    protected $word;
+    private $word;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(name="type", type="integer")
      */
-    protected $wordType;
+    private $wordType;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(name="genre", type="integer")
      */
-    protected $genreType;
+    private $genreType;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
-    protected $created;
+    private $created;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer")
      */
-    protected $backup;
+    private $backup;
 
     /**
-     * @return mixed
+     * Get id
+     *
+     * @return integer
      */
     public function getId()
     {
@@ -56,7 +70,22 @@ class Word
     }
 
     /**
-     * @return mixed
+     * Set word
+     *
+     * @param string $word
+     * @return Word
+     */
+    public function setWord($word)
+    {
+        $this->word = $word;
+
+        return $this;
+    }
+
+    /**
+     * Get word
+     *
+     * @return string
      */
     public function getWord()
     {
@@ -64,15 +93,22 @@ class Word
     }
 
     /**
-     * @param mixed $word
+     * Set wordType
+     *
+     * @param integer $wordType
+     * @return Word
      */
-    public function setWord($word)
+    public function setWordType($wordType)
     {
-        $this->word = $word;
+        $this->wordType = $wordType;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get wordType
+     *
+     * @return integer
      */
     public function getWordType()
     {
@@ -80,15 +116,22 @@ class Word
     }
 
     /**
-     * @param mixed $wordType
+     * Set genreType
+     *
+     * @param integer $genreType
+     * @return Word
      */
-    public function setWordType($wordType)
+    public function setGenreType($genreType)
     {
-        $this->wordType = $wordType;
+        $this->genreType = $genreType;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get genreType
+     *
+     * @return integer
      */
     public function getGenreType()
     {
@@ -96,15 +139,22 @@ class Word
     }
 
     /**
-     * @param mixed $genreType
+     * Set created
+     *
+     * @param string $created
+     * @return Word
      */
-    public function setGenreType($genreType)
+    public function setCreated($created)
     {
-        $this->genreType = $genreType;
+        $this->created = $created;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get created
+     *
+     * @return string
      */
     public function getCreated()
     {
@@ -112,28 +162,25 @@ class Word
     }
 
     /**
-     * @param mixed $created
+     * Set backup
+     *
+     * @param integer $backup
+     * @return Word
      */
-    public function setCreated($created)
+    public function setBackup($backup)
     {
-        $this->created = $created;
+        $this->backup = $backup;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get backup
+     *
+     * @return integer
      */
     public function getBackup()
     {
         return $this->backup;
     }
-
-    /**
-     * @param mixed $backup
-     */
-    public function setBackup($backup)
-    {
-        $this->backup = $backup;
-    }
-
-
 }
