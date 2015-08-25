@@ -23,6 +23,10 @@ class WordRepository extends EntityRepository
             ->setParameters(array("wordType" => $wordType, "genreType" => $genreType))
             ->getQuery()->getResult(Query::HYDRATE_ARRAY);
 
+        if (!$words) {
+            $words = array();
+        }
+
         return $words;
     }
 
@@ -33,6 +37,10 @@ class WordRepository extends EntityRepository
             ->from("AppBundle:Word", "w")->where("w.genreType = :genreType")
             ->setParameter("genreType", $genreType)
             ->getQuery()->getSingleScalarResult();
+
+        if (!$count) {
+            $count = 0;
+        }
 
         return $count;
     }
@@ -50,5 +58,40 @@ class WordRepository extends EntityRepository
         $this->getEntityManager()->flush();
 
         return $newWord;
+    }
+
+    public function getCountByWordTypeAndGenreType($wordType, $genreType)
+    {
+        $count = $this->getEntityManager()->createQueryBuilder()
+            ->select("count(w)")
+            ->from("AppBundle:Word", "w")
+            ->where("w.wordType = :wordType")->andWhere("w.genreType = :genreType")
+            ->setParameters(array("wordType" => $wordType, "genreType" => $genreType))
+            ->getQuery()->getSingleScalarResult();
+
+        if (!$count) {
+            $count = 0;
+        }
+
+        return $count;
+    }
+
+    public function update($id, $newValue)
+    {
+        $word = $this->find($id);
+        $word->setWord($newValue);
+
+        $this->getEntityManager()->flush();
+
+        return $word;
+    }
+
+    public function delete($id)
+    {
+        $word = $this->find($id);
+        $word->setEnabled(0);
+
+//        $this->getEntityManager()->remove($word);
+        $this->getEntityManager()->flush();
     }
 }

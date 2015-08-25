@@ -35,6 +35,7 @@ class SG_DataController extends Controller
      *
      * @param $wordType
      * @param $genreType
+     *
      * @return Response
      */
     public function wordAction($wordType, $genreType)
@@ -48,6 +49,7 @@ class SG_DataController extends Controller
      * @Route("/get/word/count/genre/{genreType}")
      *
      * @param $genreType
+     *
      * @return Response
      */
     public function genreCountAction($genreType)
@@ -61,6 +63,7 @@ class SG_DataController extends Controller
      * @Route("/get/favorite/rate/count/{rate}")
      *
      * @param $rate
+     *
      * @return Response
      */
     public function favoriteCountByRateAction($rate)
@@ -74,6 +77,7 @@ class SG_DataController extends Controller
      * @Route("/get/favorite/category/item/count/{categoryId}")
      *
      * @param $categoryId
+     *
      * @return Response
      */
     public function favoriteCountByParentIdAction($categoryId)
@@ -95,15 +99,16 @@ class SG_DataController extends Controller
     }
 
     /**
-     * @Route("/add/word/{wordType}/{genreType}/{newValue}/{created}")
+     * @Route("/new/word/{wordType}/{genreType}/{newValue}/{created}")
      *
      * @param $wordType
      * @param $genreType
      * @param $newValue
      * @param $created
+     *
      * @return Response
      */
-    public function addNewWordAction($wordType, $genreType, $newValue, $created)
+    public function newWordAction($wordType, $genreType, $newValue, $created)
     {
         $newWord = $this->getWordRepository()->create($wordType, $genreType, $newValue, $created);
 
@@ -117,6 +122,7 @@ class SG_DataController extends Controller
      * @Route("/get/favorite/rate/item/{rate}")
      *
      * @param $rate
+     *
      * @return Response
      */
     public function favoritesByRateAction($rate)
@@ -130,6 +136,7 @@ class SG_DataController extends Controller
      * @Route("/get/favorite/item/{categoryId}")
      *
      * @param $categoryId
+     *
      * @return Response
      */
     public function favoritesByCategoryIdAction($categoryId)
@@ -137,6 +144,21 @@ class SG_DataController extends Controller
         $favoriteArray = $this->getFavoriteRepository()->findByParentId($categoryId);
 
         return new Response(json_encode($favoriteArray));
+    }
+
+    /**
+     * @Route("/get/word/count/type/{wordType}/genre/{genreType}")
+     *
+     * @param $wordType
+     * @param $genreType
+     *
+     * @return Response
+     */
+    public function wordCountByWordTypeAndGenreTypeAction($wordType, $genreType)
+    {
+        $count = $this->getWordRepository()->getCountByWordTypeAndGenreType($wordType, $genreType);
+
+        return new Response($count);
     }
 
     private function getWordRepository()
