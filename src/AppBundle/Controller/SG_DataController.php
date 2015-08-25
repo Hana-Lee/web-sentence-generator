@@ -38,7 +38,11 @@ class SG_DataController extends Controller
      */
     public function wordAction($wordType, $genreType)
     {
-        $wordArray = $this->getWordRepository()->findByWordTypeAndGenreType($wordType, $genreType);
+        if ($genreType == self::GENRE_ETC) {
+            $wordArray = $this->getWordRepository()->findByWordType($wordType);
+        } else {
+            $wordArray = $this->getWordRepository()->findByWordTypeAndGenreType($wordType, $genreType);
+        }
 
         return new Response(json_encode($wordArray));
     }

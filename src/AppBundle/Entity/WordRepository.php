@@ -30,6 +30,23 @@ class WordRepository extends EntityRepository
         return $words;
     }
 
+    public function findByWordType($wordType)
+    {
+        $words = $this->getEntityManager()->createQueryBuilder()
+            ->select("w")
+            ->from("AppBundle:Word", "w")
+            ->where("w.wordType = :wordType")
+            ->orderBy("w.word", "ASC")->addOrderBy("w.created", "DESC")
+            ->setParameter("wordType", $wordType)
+            ->getQuery()->getResult(Query::HYDRATE_ARRAY);
+
+        if (!$words) {
+            $words = array();
+        }
+
+        return $words;
+    }
+
     public function getCount()
     {
         $count = $this->getEntityManager()->createQueryBuilder()
