@@ -131,7 +131,7 @@
             }).show();
         }
 
-        function createWordDataTable(word, genre) {
+        function getWordDataTable(word, genre) {
             return {
                 id: sg.dataTable.prefix + word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
@@ -162,7 +162,7 @@
             }
         }
 
-        function createFavoriteRateDataTable(rate) {
+        function getFavoriteRateDataTable(rate) {
             return {
                 id: sg.dataTable.prefix + "rate", view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
@@ -193,7 +193,7 @@
             }
         }
 
-        function createFavoriteNameDataTable(categoryId) {
+        function getFavoriteNameDataTable(categoryId) {
             return {
                 id: sg.dataTable.prefix + "name", view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
@@ -515,13 +515,13 @@
 
                             if (sg.context.currentMenuId !== "show_favorite") {
                                 $$("body_layout").removeView("side_menu");
-                                $$("body_layout").removeView("content_container");
-                                $$("body_layout").addView(webix.copy(createFavoriteMenu()), 0);
+//                                $$("body_layout").removeView("content_container");
+                                $$("body_layout").addView(webix.copy(getFavoriteMenu()), 0);
 
-                                var firstId = $$("fav_name_menu").getFirstId();
-                                $$("fav_name_menu").select(firstId);
+//                                var firstId = $$("fav_name_menu").getFirstId();
+//                                $$("fav_name_menu").select(firstId);
 
-                                $$("body_layout").addView(createFavoriteNameContentContainer(firstId));
+//                                $$("body_layout").addView(createFavoriteNameContentContainer(firstId));
                             }
 
                             sg.context.currentMenuId = "show_favorite";
@@ -537,7 +537,7 @@
                             if (sg.context.currentMenuId !== "show_generate") {
                                 $$("body_layout").removeView("side_menu");
 
-                                $$("body_layout").addView(webix.copy(createGenerateMenu()), 0);
+                                $$("body_layout").addView(webix.copy(getGenerateMenu()), 0);
 
                             }
 
@@ -577,22 +577,21 @@
             ]
         };
 
-        function createFavoriteRateListTabView(rate) {
+        function getFavoriteRateListTabView(rate) {
             return {
                 id: sg.dataTable.prefix + "tabview", view: "tabview", cells: [
                     {
-                        id: "fav_name", header: sg.rateCharacter[rate], body : createFavoriteRateDataTable(rate)
+                        id: "fav_name", header: sg.rateCharacter[rate], body : getFavoriteRateDataTable(rate)
                     }
                 ]
             };
         }
 
-        function createFavoriteNameListTabView(categoryId) {
-            var tabTitleText = $$("fav_name_menu").getSelectedItem().name;
+        function getFavoriteNameListTabView(categoryId, title) {
             return {
                 id: sg.dataTable.prefix + "tabview", view: "tabview", cells: [
                     {
-                        id: "fav_name", header: tabTitleText, body : createFavoriteNameDataTable(categoryId)
+                        id: "fav_name", header: title, body : getFavoriteNameDataTable(categoryId)
                     }
                 ]
             };
@@ -623,10 +622,10 @@
             }
         };
 
-        var nounDataTable = createWordDataTable(sg.word.noun, sg.genre.poetry);
-        var verbDataTable = createWordDataTable(sg.word.verb, sg.genre.poetry);
-        var adverbDataTable = createWordDataTable(sg.word.adverb, sg.genre.poetry);
-        var adjectiveDataTable = createWordDataTable(sg.word.adjective, sg.genre.poetry);
+        var nounDataTable = getWordDataTable(sg.word.noun, sg.genre.poetry);
+        var verbDataTable = getWordDataTable(sg.word.verb, sg.genre.poetry);
+        var adverbDataTable = getWordDataTable(sg.word.adverb, sg.genre.poetry);
+        var adjectiveDataTable = getWordDataTable(sg.word.adjective, sg.genre.poetry);
 
         var wordLists = {
             id:"data_table_cells",
@@ -638,17 +637,17 @@
             ]
         };
 
-        function updateFavoriteRateContentContainer(rate) {
+        function createFavoriteRateContentContainer(rate) {
             $$("body_layout").removeView("content_container");
-            $$("body_layout").addView(createFavoriteRateContentContainer(rate));
+            $$("body_layout").addView(getFavoriteRateContentContainer(rate));
         }
 
-        function updateFavoriteNameContentContainer(categoryId) {
+        function createFavoriteNameContentContainer(categoryId, title) {
             $$("body_layout").removeView("content_container");
-            $$("body_layout").addView(createFavoriteNameContentContainer(categoryId));
+            $$("body_layout").addView(getFavoriteNameContentContainer(categoryId, title));
         }
 
-        function createFavoriteRateMenu() {
+        function getFavoriteRateMenu() {
             return {
                 id: "fav_rate_menu", view: "menu", layout: "y", select: true, width: 240, data: [
                     {id: 5, icon: "support", value: sg.rateCharacter[5], badge: getFavoriteRateItemCount(5)},
@@ -661,9 +660,10 @@
                     onMenuItemClick: function (rate) {
                         var favoriteDataTable = $$(sg.dataTable.prefix + "rate");
                         var selectedItemText = this.getItem(rate).value;
+                        selectedItemText = selectedItemText + " (" + this.getItem(rate).badge + ")";
 
                         if (isUndefined(favoriteDataTable)) {
-                            updateFavoriteRateContentContainer(rate);
+                            createFavoriteRateContentContainer(rate);
                         } else {
                             updateFavoriteTabViewTitle(selectedItemText);
                             updateFavoriteRateDataTable(rate);
@@ -673,7 +673,7 @@
             };
         }
 
-        function createFavoriteCategoryMenu() {
+        function getFavoriteCategoryMenu() {
             return {
                 id: "fav_name_menu", view: "menu", layout: "y", select:true, width: 240, scroll:"y",
                 data: getFavoriteCategoriesFromServer(),
@@ -681,9 +681,10 @@
                     onMenuItemClick: function (id) {
                         var favoriteDataTable = $$(sg.dataTable.prefix + "name");
                         var selectedItemText = this.getItem(id).value;
+                        selectedItemText = selectedItemText + " (" + this.getItem(id).badge + ")";
 
                         if (isUndefined(favoriteDataTable)) {
-                            updateFavoriteNameContentContainer(id);
+                            createFavoriteNameContentContainer(id, selectedItemText);
                         } else {
                             updateFavoriteTabViewTitle(selectedItemText);
                             updateFavoriteNameDataTable(id);
@@ -693,20 +694,20 @@
             };
         }
 
-        function createFavoriteMenu() {
+        function getFavoriteMenu() {
             return {
                 id: "side_menu", view: "tabview", width: 242, cells: [
                     {
-                        id: "fav_name", header: "이름별", body : createFavoriteCategoryMenu()
+                        id: "fav_name", header: "이름별", body : getFavoriteCategoryMenu()
                     },
                     {
-                        id: "fav_rate", header: "평가별", body : createFavoriteRateMenu()
+                        id: "fav_rate", header: "평가별", body : getFavoriteRateMenu()
                     }
                 ]
             };
         }
 
-        function createGenerateMenu() {
+        function getGenerateMenu() {
             return {
                 id: "side_menu", view: "menu", layout: "y", select:true, width: 240, data: [
                     {id: 1, icon: "support", value: "문장생성", badge: "12"}
@@ -738,18 +739,18 @@
             }
         };
 
-        function createFavoriteNameContentContainer(categoryId) {
+        function getFavoriteNameContentContainer(categoryId, title) {
             return {
                 id:"content_container", rows: [
-                    createFavoriteNameListTabView(categoryId)
+                    getFavoriteNameListTabView(categoryId, title)
                 ]
             };
         }
 
-        function createFavoriteRateContentContainer(rate) {
+        function getFavoriteRateContentContainer(rate) {
             return {
                 id:"content_container", rows: [
-                    createFavoriteRateListTabView(rate)
+                    getFavoriteRateListTabView(rate)
                 ]
             };
         }
