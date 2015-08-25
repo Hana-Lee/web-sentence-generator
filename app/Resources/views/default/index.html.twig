@@ -62,8 +62,12 @@
         .checked_row {
             background-color: #DDFFDD;
         }
+        .webix_column.sentence .webix_cell {
+            font-size: 12px;
+        }
         .webix_cell p {
             margin: 0;
+            /*font-size: 12px;*/
         }
     </style>
 {% endblock %}
@@ -100,11 +104,11 @@
         };
 
         var sgRateCharacter = {
-            1 : "★☆☆☆☆",
-            2 : "★★☆☆☆",
-            3 : "★★★☆☆",
-            4 : "★★★★☆",
-            5 : "★★★★★"
+            1 : "♥♡♡♡♡",
+            2 : "♥♥♡♡♡",
+            3 : "♥♥♥♡♡",
+            4 : "♥♥♥♥♡",
+            5 : "♥♥♥♥♥"
         };
 
         sg.context = sgContext;
@@ -127,13 +131,13 @@
             }).show();
         }
 
-        function makeWordDataTable(word, genre) {
+        function createWordDataTable(word, genre) {
             return {
                 id: sg.dataTable.prefix + word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
                     {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
                     {id: "word", header: "단어", sort:"string", fillspace: true},
-                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 200, css: "t_center"}
+                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
                 ],
                 data: getWordData(word, genre),
                 schema:{
@@ -158,16 +162,47 @@
             }
         }
 
-        function makeFavoriteDataTable(favoriteType, rate) {
+        function createFavoriteRateDataTable(rate) {
             return {
-                id: sg.dataTable.prefix + favoriteType, view: "datatable", columns: [
+                id: sg.dataTable.prefix + "rate", view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
                     {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
-                    {id: "sentence", header: "문장", sort:"string", fillspace: true},
-                    {id: "star", header: "평가", sort:"string", width: 100, css: "t_center"},
-                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 200, css: "t_center"}
+                    {id: "sentence", header: "문장", sort:"string", fillspace: true, css:"sentence"},
+                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
                 ],
                 data: getFavoriteItemByRate(rate),
+                schema:{
+                    $change:function(item) {
+                        console.log(item);
+                    }
+                },
+                hover:"word_datatable_row_hover",
+                select:false,
+                on : {
+                    onItemClick : function(id, event, node) {
+                        var item = this.getItem(id.row);
+                        item.status = !item.status;
+                        if (item.status) {
+                            this.addRowCss(id.row, "checked_row");
+                        } else {
+                            this.removeRowCss(id.row, "checked_row");
+                        }
+                        this.refresh(id.row);
+                    }
+                }
+            }
+        }
+
+        function createFavoriteNameDataTable(categoryId) {
+            return {
+                id: sg.dataTable.prefix + "name", view: "datatable", columns: [
+                    {id: "number", header: "No.", width: 50, css: "t_center"},
+                    {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
+                    {id: "sentence", header: "문장", sort:"string", fillspace: true, css:"sentence"},
+                    {id: "star", header: "평가", sort:"string", width: 100, css: "t_center"},
+                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
+                ],
+                data: getFavoriteItemByCategoryId(categoryId),
                 schema:{
                     $change:function(item) {
                         console.log(item);
@@ -238,6 +273,18 @@
             return result;
         }
 
+        function updateFavoriteNameDataTable(categoryId) {
+            var favoriteData = getFavoriteItemByCategoryId(categoryId);
+            $$(sg.dataTable.prefix + "name").clearAll();
+            $$(sg.dataTable.prefix + "name").parse(favoriteData);
+        }
+
+        function updateFavoriteRateDataTable(rate) {
+            var favoriteData = getFavoriteItemByRate(rate);
+            $$(sg.dataTable.prefix + "rate").clearAll();
+            $$(sg.dataTable.prefix + "rate").parse(favoriteData);
+        }
+
         function updateWordDataTable(genre) {
             var availableWords = sg.word;
             for(var key in availableWords) {
@@ -258,13 +305,13 @@
             }
         }
 
-        function makeNewWordData(newWordValue) {
+        function createNewWordData(newWordValue) {
             var dateObj = new Date();
             var currentTime = dateObj.getTime();
             return {id:currentTime, status:0, number: 0, word:newWordValue, wordType:0, genreType:0, created:dateObj, backup:0};
         }
 
-        function addNewWord(word, genre) {
+        function createNewWord(word, genre) {
             var newWordValue = $$("new_word_input").getValue();
             if (newWordValue !== "") {
                 var currentTabBarItemId = $$(sg.dataTable.prefix + "tabbar").getValue();
@@ -273,16 +320,16 @@
                 var currentGenreId = $$("side_menu").getSelectedItem().id;
                 var currentGenre = sg.genre[currentGenreId];
 
-                var newData = addNewWordToServer(currentWord, currentGenre, newWordValue);
+                var newData = createNewWordToServer(currentWord, currentGenre, newWordValue);
                 $$(currentTabBarItemId).add(newData, 0);
                 $$(currentTabBarItemId).addRowCss(newData.id, "new_word_value");
             }
         }
 
-        function addNewWordToServer(word, genre, newWord) {
+        function createNewWordToServer(word, genre, newWord) {
             var dateObj = new Date();
             var currentTime = dateObj.getTime();
-            var newWordResponseData = webix.ajax().sync().post("add/word/" + word.code + "/" + genre.code + "/" + newWord + "/" + currentTime);
+            var newWordResponseData = webix.ajax().sync().post("new/word/" + word.code + "/" + genre.code + "/" + newWord + "/" + currentTime);
             var result = {};
             if (newWordResponseData.status === 200) {
                 var jsonData = JSON.parse(newWordResponseData.response);
@@ -335,11 +382,33 @@
         }
 
         function getFavoriteItemByRate(rate) {
-            var favoriteRateItemResult = webix.ajax().sync().post("get/favorite/rate/item/" + rate);
+            var favoriteItemResult = webix.ajax().sync().post("get/favorite/rate/item/" + rate);
 
             var result = [];
-            if (favoriteRateItemResult.status === 200) {
-                result = JSON.parse(favoriteRateItemResult.response);
+            if (favoriteItemResult.status === 200) {
+                result = JSON.parse(favoriteItemResult.response);
+
+                var count = 1;
+                $(result).each(function(index, favorite) {
+                    favorite["status"] = 0;
+                    favorite["created"] = new Date(Number(favorite["created"]));
+                    favorite["number"] = count++;
+                    var rateValue = favorite["rate"];
+                    favorite["star"] = sg.rateCharacter[rateValue];
+
+                    result[index] = favorite;
+                });
+            }
+
+            return result;
+        }
+
+        function getFavoriteItemByCategoryId(categoryId) {
+            var favoriteItemResult = webix.ajax().sync().post("get/favorite/item/" + categoryId);
+
+            var result = [];
+            if (favoriteItemResult.status === 200) {
+                result = JSON.parse(favoriteItemResult.response);
 
                 var count = 1;
                 $(result).each(function(index, favorite) {
@@ -376,6 +445,47 @@
 //            $$("main_container").hideProgress();
         }
 
+        function getWordCountByWordTypeAndGenreType(word, genre) {
+            var wordCountResult = webix.ajax().sync().post("get/word/count/type/" + word.code + "/genre/" + genre.code);
+            var result = 0;
+
+            if (wordCountResult.status === 200) {
+                result = wordCountResult.response;
+            }
+
+            return result;
+        }
+
+        function getCurrentGenre() {
+            var selectedItem = $$("side_menu").getSelectedItem();
+            return sg.genre[selectedItem.id];
+        }
+
+        function dataTableTabBarTitleAddWordCount(genreId) {
+            var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
+
+            $tabbarTitleElements.each(function(index, elem) {
+                var elemId = $(elem).attr("button_id");
+                var wordId = elemId.replace("dt_", "");
+                var word = sg.word[wordId];
+                var genre;
+                if (isUndefined(genreId)) {
+                    genre = getCurrentGenre();
+                } else {
+                    genre = sg.genre[genreId];
+                }
+
+                var wordCount = getWordCountByWordTypeAndGenreType(word, genre);
+                var originalText = $(elem).text();
+                $(elem).text(word.name + "(" + wordCount + ")");
+            });
+        }
+
+        function updateFavoriteTabViewTitle(selectedItemText) {
+            var $dtTabViewTitleElements = $("div[view_id='dt_tabview']").find(".webix_item_tab.webix_selected");
+            $($dtTabViewTitleElements[0]).text(selectedItemText);
+        }
+
         var topToolbar = {
             id:"toolbar", view:"toolbar",cols:[
                 { view:"label", template: "Sentence Generator 시어 생성기 사랑합니다♥"},
@@ -405,7 +515,13 @@
 
                             if (sg.context.currentMenuId !== "show_favorite") {
                                 $$("body_layout").removeView("side_menu");
-                                $$("body_layout").addView(webix.copy(makeFavoriteMenu()), 0);
+                                $$("body_layout").removeView("content_container");
+                                $$("body_layout").addView(webix.copy(createFavoriteMenu()), 0);
+
+                                var firstId = $$("fav_name_menu").getFirstId();
+                                $$("fav_name_menu").select(firstId);
+
+                                $$("body_layout").addView(createFavoriteNameContentContainer(firstId));
                             }
 
                             sg.context.currentMenuId = "show_favorite";
@@ -418,10 +534,11 @@
                     id:"show_generate", view:"button", type:"icon", icon:"cog", label:"문장생성", width:100, align:"left", on:{
                         onItemClick:function(id) {
 //                            showWaitDialog();
-                            console.log("show generate");
                             if (sg.context.currentMenuId !== "show_generate") {
                                 $$("body_layout").removeView("side_menu");
-                                $$("body_layout").addView(webix.copy(makeGenerateMenu()), 0);
+
+                                $$("body_layout").addView(webix.copy(createGenerateMenu()), 0);
+
                             }
 
                             sg.context.currentMenuId = "show_generate";
@@ -430,12 +547,7 @@
                         }
                     }
                 }
-            ],
-            on: {
-                onChange:function() {
-                    console.log(arguments);
-                }
-            }
+            ]
         };
 
         var wordInputForm = {
@@ -455,7 +567,7 @@
                         {
                             view: "button", value: "입력", type: "form", width: 100, on:{
                                 onItemClick: function(id, event) {
-                                    addNewWord();
+                                    createNewWord();
                                     return false;
                                 }
                             }
@@ -465,6 +577,27 @@
             ]
         };
 
+        function createFavoriteRateListTabView(rate) {
+            return {
+                id: sg.dataTable.prefix + "tabview", view: "tabview", cells: [
+                    {
+                        id: "fav_name", header: sg.rateCharacter[rate], body : createFavoriteRateDataTable(rate)
+                    }
+                ]
+            };
+        }
+
+        function createFavoriteNameListTabView(categoryId) {
+            var tabTitleText = $$("fav_name_menu").getSelectedItem().name;
+            return {
+                id: sg.dataTable.prefix + "tabview", view: "tabview", cells: [
+                    {
+                        id: "fav_name", header: tabTitleText, body : createFavoriteNameDataTable(categoryId)
+                    }
+                ]
+            };
+        }
+
         var wordListTabBar = {
             id:sg.dataTable.prefix + "tabbar", view: "tabbar", value:sg.dataTable.prefix + sg.word.noun.id, multiview:true, options: [
                 {id: sg.dataTable.prefix + sg.word.noun.id, value: sg.word.noun.name},
@@ -473,11 +606,6 @@
                 {id: sg.dataTable.prefix + sg.word.adjective.id, value: sg.word.adjective.name}
             ],
             on: {
-                onAfterTabClick: function(id, event) {
-                    console.log("on after");
-                },
-                onBeforeTabClick: function(id, event) {
-                },
                 onChange: function(newValue, oldValue) {
                     var wordInputTitle = $$("word_input_title");
                     var $wordInputTitle = jQuery("div[view_id='word_input_form']");
@@ -495,10 +623,10 @@
             }
         };
 
-        var nounDataTable = makeWordDataTable(sg.word.noun, sg.genre.poetry);
-        var verbDataTable = makeWordDataTable(sg.word.verb, sg.genre.poetry);
-        var adverbDataTable = makeWordDataTable(sg.word.adverb, sg.genre.poetry);
-        var adjectiveDataTable = makeWordDataTable(sg.word.adjective, sg.genre.poetry);
+        var nounDataTable = createWordDataTable(sg.word.noun, sg.genre.poetry);
+        var verbDataTable = createWordDataTable(sg.word.verb, sg.genre.poetry);
+        var adverbDataTable = createWordDataTable(sg.word.adverb, sg.genre.poetry);
+        var adjectiveDataTable = createWordDataTable(sg.word.adjective, sg.genre.poetry);
 
         var wordLists = {
             id:"data_table_cells",
@@ -510,59 +638,75 @@
             ]
         };
 
-        function makeFavoriteRateMenu() {
+        function updateFavoriteRateContentContainer(rate) {
+            $$("body_layout").removeView("content_container");
+            $$("body_layout").addView(createFavoriteRateContentContainer(rate));
+        }
+
+        function updateFavoriteNameContentContainer(categoryId) {
+            $$("body_layout").removeView("content_container");
+            $$("body_layout").addView(createFavoriteNameContentContainer(categoryId));
+        }
+
+        function createFavoriteRateMenu() {
             return {
                 id: "fav_rate_menu", view: "menu", layout: "y", select: true, width: 240, data: [
-                    {id: 5, icon: "support", value: "♥♥♥♥♥", badge: getFavoriteRateItemCount(5)},
-                    {id: 4, icon: "support", value: "♥♥♥♥♡", badge: getFavoriteRateItemCount(4)},
-                    {id: 3, icon: "support", value: "♥♥♥♡♡", badge: getFavoriteRateItemCount(3)},
-                    {id: 2, icon: "support", value: "♥♥♡♡♡", badge: getFavoriteRateItemCount(2)},
-                    {id: 1, icon: "support", value: "♥♡♡♡♡", badge: getFavoriteRateItemCount(1)}
+                    {id: 5, icon: "support", value: sg.rateCharacter[5], badge: getFavoriteRateItemCount(5)},
+                    {id: 4, icon: "support", value: sg.rateCharacter[4], badge: getFavoriteRateItemCount(4)},
+                    {id: 3, icon: "support", value: sg.rateCharacter[3], badge: getFavoriteRateItemCount(3)},
+                    {id: 2, icon: "support", value: sg.rateCharacter[2], badge: getFavoriteRateItemCount(2)},
+                    {id: 1, icon: "support", value: sg.rateCharacter[1], badge: getFavoriteRateItemCount(1)}
                 ],
                 on: {
-                    onMenuItemClick: function (id) {
-                        // TODO : 클릭시 데이터 테이블 새로 만들고 DB로부터 가지고온 데이터 넣기.
-//                        $$("content_container").removeView(sg.dataTable.prefix + "tabbar");
-//                        $$("content_container").removeView("data_table_cells");
-//
-//                        $$("content_container").addView(makeFavoriteDataTable("rate", 5));
-//                        makeFavoriteDataTable("rate", 5);
-                        var result = getFavoriteItemByRate(5);
-                        var wordInputTitle = $$("word_input_title");
-                        wordInputTitle.setValue(result[0].sentence);
-                        $$("dt_noun").getItem(1145).word = result[0].sentence;
-                        console.log(id);
+                    onMenuItemClick: function (rate) {
+                        var favoriteDataTable = $$(sg.dataTable.prefix + "rate");
+                        var selectedItemText = this.getItem(rate).value;
+
+                        if (isUndefined(favoriteDataTable)) {
+                            updateFavoriteRateContentContainer(rate);
+                        } else {
+                            updateFavoriteTabViewTitle(selectedItemText);
+                            updateFavoriteRateDataTable(rate);
+                        }
                     }
                 }
             };
         }
 
-        function makeFavoriteCategoryMenu() {
+        function createFavoriteCategoryMenu() {
             return {
                 id: "fav_name_menu", view: "menu", layout: "y", select:true, width: 240, scroll:"y",
                 data: getFavoriteCategoriesFromServer(),
                 on: {
                     onMenuItemClick: function (id) {
-                        console.log(id);
+                        var favoriteDataTable = $$(sg.dataTable.prefix + "name");
+                        var selectedItemText = this.getItem(id).value;
+
+                        if (isUndefined(favoriteDataTable)) {
+                            updateFavoriteNameContentContainer(id);
+                        } else {
+                            updateFavoriteTabViewTitle(selectedItemText);
+                            updateFavoriteNameDataTable(id);
+                        }
                     }
                 }
             };
         }
 
-        function makeFavoriteMenu() {
+        function createFavoriteMenu() {
             return {
                 id: "side_menu", view: "tabview", width: 242, cells: [
                     {
-                        id: "fav_name", header: "이름별", body : makeFavoriteCategoryMenu()
+                        id: "fav_name", header: "이름별", body : createFavoriteCategoryMenu()
                     },
                     {
-                        id: "fav_rate", header: "평가별", body : makeFavoriteRateMenu()
+                        id: "fav_rate", header: "평가별", body : createFavoriteRateMenu()
                     }
                 ]
             };
         }
 
-        function makeGenerateMenu() {
+        function createGenerateMenu() {
             return {
                 id: "side_menu", view: "menu", layout: "y", select:true, width: 240, data: [
                     {id: 1, icon: "support", value: "문장생성", badge: "12"}
@@ -587,8 +731,36 @@
                     } else {
                         clearAllWordDataTable();
                     }
+                },
+                onAfterSelect: function(id) {
+                    dataTableTabBarTitleAddWordCount(id);
                 }
             }
+        };
+
+        function createFavoriteNameContentContainer(categoryId) {
+            return {
+                id:"content_container", rows: [
+                    createFavoriteNameListTabView(categoryId)
+                ]
+            };
+        }
+
+        function createFavoriteRateContentContainer(rate) {
+            return {
+                id:"content_container", rows: [
+                    createFavoriteRateListTabView(rate)
+                ]
+            };
+        }
+
+        var contentContainer = {
+            id:"content_container", rows: [
+                wordInputForm,
+                {$template: "Spacer", height: 10},
+                wordListTabBar,
+                wordLists
+            ]
         };
 
         var bodyLayout = {
@@ -596,14 +768,7 @@
             cols: [
                 wordListMenu,
                 {$template: "Spacer", width: 10},
-                {
-                    id:"content_container", rows: [
-                        wordInputForm,
-                        {$template: "Spacer", height: 10},
-                        wordListTabBar,
-                        wordLists
-                    ]
-                }
+                contentContainer
             ]
         };
 
