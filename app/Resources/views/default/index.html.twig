@@ -270,7 +270,7 @@
 
         function getRandomNumber(range) {
             var result = 0;
-            for (var i = 0; i < 99; i++) {
+            for (var i = 0; i < 999; i++) {
                 result = parseInt(Math.random() * range, 10);
             }
 
@@ -516,7 +516,7 @@
                 var currentTabBarItemId = $$(sg.dataTable.prefix + "tabbar").getValue();
                 var currentWordId = currentTabBarItemId.replace(sg.dataTable.prefix, "");
                 var currentWord = sg.word[currentWordId];
-                var currentGenreId = $$("side_menu").getSelectedItem().id;
+                var currentGenreId = $$("genre_list_side_menu").getSelectedItem().id;
                 var currentGenre = sg.genre[currentGenreId];
 
                 var newData = createNewWordToServer(currentWord, currentGenre, newWordValue);
@@ -656,7 +656,7 @@
         }
 
         function getCurrentGenre() {
-            var selectedItem = $$("side_menu").getSelectedItem();
+            var selectedItem = $$("genre_list_side_menu").getSelectedItem();
             return sg.genre[selectedItem.id];
         }
 
@@ -700,7 +700,7 @@
 //                            showWaitDialog();
                             if (sg.context.currentMenuId !== "show_word") {
                                 $$("body_layout").removeView("side_menu");
-                                $$("body_layout").addView(webix.copy(wordListMenu), 0);
+                                $$("body_layout").addView(webix.copy(getWordGenreMenuTabView()), 0);
 //                                $$("side_menu").select(sg.genre.poetry.id);
                             }
 
@@ -742,7 +742,7 @@
                             if (sg.context.currentMenuId !== "show_generate") {
                                 $$("body_layout").removeView("side_menu");
 
-                                $$("body_layout").addView(webix.copy(getGenerateMenu()), 0);
+                                $$("body_layout").addView(webix.copy(getGeneratedSentenceGenreMenuTabView()), 0);
 
                             }
 
@@ -1016,9 +1016,29 @@
             };
         }
 
+        function getWordGenreMenuTabView() {
+            return {
+                id: "side_menu", view: "tabview", width: 242, cells: [
+                    {
+                        id: "genre_select", header: "장르 선택", body : getGenreListMenu()
+                    }
+                ]
+            };
+        }
+
+        function getGeneratedSentenceGenreMenuTabView() {
+            return {
+                id: "side_menu", view: "tabview", width: 242, cells: [
+                    {
+                        id: "generated_sentence_genre_select", header: "장르 선택", body : getGenerateMenu()
+                    }
+                ]
+            };
+        }
+
         function getGenerateMenu() {
             return {
-                id: "side_menu", view: "menu", layout: "y", select:true, width: 240, data: getGenreData(true),
+                id: "generated_sentence_side_menu", view: "menu", layout: "y", select:true, width: 240, data: getGenreData(true),
                 on: {
                     onMenuItemClick: function (id) {
                         var selectedGenre = sg.genre[id];
@@ -1040,30 +1060,32 @@
             };
         }
 
-        var wordListMenu = {
-            id: "side_menu", view: "menu", layout: "y", select: true, width: 240, data: getGenreData(),
-            on: {
-                onMenuItemClick: function (id) {
-                    var selectedGenre = sg.genre[id];
-                    var wordListDataTable = $$(sg.dataTable.prefix + "noun");
+        function getGenreListMenu() {
+            return {
+                id: "genre_list_side_menu", view: "menu", layout: "y", select: true, width: 240, data: getGenreData(),
+                on: {
+                    onMenuItemClick: function (id) {
+                        var selectedGenre = sg.genre[id];
+                        var wordListDataTable = $$(sg.dataTable.prefix + "noun");
 
-                    if (isUndefined(wordListDataTable)) {
-                        createWordContentContainer(selectedGenre);
-                    } else {
-                        var selectedItem = this.getItem(id);
-                        var badgeValue = Number(selectedItem.badge);
-                        if (badgeValue > 0) {
-                            updateWordDataTable(selectedGenre);
+                        if (isUndefined(wordListDataTable)) {
+                            createWordContentContainer(selectedGenre);
                         } else {
-                            clearAllWordDataTable();
+                            var selectedItem = this.getItem(id);
+                            var badgeValue = Number(selectedItem.badge);
+                            if (badgeValue > 0) {
+                                updateWordDataTable(selectedGenre);
+                            } else {
+                                clearAllWordDataTable();
+                            }
                         }
+                    },
+                    onAfterSelect: function(id) {
+                        dataTableTabBarTitleAddWordCount(id);
                     }
-                },
-                onAfterSelect: function(id) {
-                    dataTableTabBarTitleAddWordCount(id);
                 }
-            }
-        };
+            };
+        }
 
         function getFavoriteNameContentContainer(categoryId, title) {
             return {
@@ -1104,7 +1126,7 @@
         var bodyLayout = {
             id:"body_layout",
             cols: [
-                wordListMenu,
+                getWordGenreMenuTabView(),
                 {$template: "Spacer", width: 10},
                 getWordContentContainer()
             ]
@@ -1123,7 +1145,7 @@
 
         webix.extend($$("main_container"), webix.ProgressBar);
 
-        $$("side_menu").select(sg.genre.poetry.id);
+        $$("genre_list_side_menu").select(sg.genre.poetry.id);
         $$("word_input_title").setValue(sg.word.noun.name);
     </script>
 {% endblock %}
