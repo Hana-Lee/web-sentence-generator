@@ -132,6 +132,9 @@
         }
 
         function getWordDataTable(word, genre) {
+            if (isUndefined(genre)) {
+                genre = sg.genre.poetry;
+            }
             return {
                 id: sg.dataTable.prefix + word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
@@ -496,7 +499,7 @@
                             if (sg.context.currentMenuId !== "show_word") {
                                 $$("body_layout").removeView("side_menu");
                                 $$("body_layout").addView(webix.copy(wordListMenu), 0);
-                                $$("side_menu").select(sg.genre.poetry.id);
+//                                $$("side_menu").select(sg.genre.poetry.id);
                             }
 
                             sg.context.currentMenuId = "show_word";
@@ -577,11 +580,11 @@
             ]
         };
 
-        function getFavoriteRateListTabView(rate) {
+        function getFavoriteRateListTabView(rate, title) {
             return {
                 id: sg.dataTable.prefix + "tabview", view: "tabview", cells: [
                     {
-                        id: "fav_name", header: sg.rateCharacter[rate], body : getFavoriteRateDataTable(rate)
+                        id: "fav_name", header: title, body : getFavoriteRateDataTable(rate)
                     }
                 ]
             };
@@ -597,54 +600,65 @@
             };
         }
 
-        var wordListTabBar = {
-            id:sg.dataTable.prefix + "tabbar", view: "tabbar", value:sg.dataTable.prefix + sg.word.noun.id, multiview:true, options: [
-                {id: sg.dataTable.prefix + sg.word.noun.id, value: sg.word.noun.name},
-                {id: sg.dataTable.prefix + sg.word.verb.id, value: sg.word.verb.name},
-                {id: sg.dataTable.prefix + sg.word.adverb.id, value: sg.word.adverb.name},
-                {id: sg.dataTable.prefix + sg.word.adjective.id, value: sg.word.adjective.name}
-            ],
-            on: {
-                onChange: function(newValue, oldValue) {
-                    var wordInputTitle = $$("word_input_title");
-                    var $wordInputTitle = jQuery("div[view_id='word_input_form']");
-                    $wordInputTitle.removeClass(oldValue).addClass(newValue);
-                    if (newValue == sg.dataTable.prefix + sg.word.noun.id) {
-                        wordInputTitle.setValue(sg.word.noun.name);
-                    } else if (newValue == sg.dataTable.prefix + sg.word.verb.id) {
-                        wordInputTitle.setValue(sg.word.verb.name);
-                    } else if (newValue == sg.dataTable.prefix + sg.word.adverb.id) {
-                        wordInputTitle.setValue(sg.word.adverb.name);
-                    } else if (newValue == sg.dataTable.prefix + sg.word.adjective.id) {
-                        wordInputTitle.setValue(sg.word.adjective.name);
+        function getWordListTabBar() {
+            return {
+                id:sg.dataTable.prefix + "tabbar", view: "tabbar", value:sg.dataTable.prefix + sg.word.noun.id, multiview:true, options: [
+                    {id: sg.dataTable.prefix + sg.word.noun.id, value: sg.word.noun.name},
+                    {id: sg.dataTable.prefix + sg.word.verb.id, value: sg.word.verb.name},
+                    {id: sg.dataTable.prefix + sg.word.adverb.id, value: sg.word.adverb.name},
+                    {id: sg.dataTable.prefix + sg.word.adjective.id, value: sg.word.adjective.name}
+                ],
+                on: {
+                    onChange: function(newValue, oldValue) {
+                        var wordInputTitle = $$("word_input_title");
+                        var $wordInputTitle = jQuery("div[view_id='word_input_form']");
+                        $wordInputTitle.removeClass(oldValue).addClass(newValue);
+                        if (newValue == sg.dataTable.prefix + sg.word.noun.id) {
+                            wordInputTitle.setValue(sg.word.noun.name);
+                        } else if (newValue == sg.dataTable.prefix + sg.word.verb.id) {
+                            wordInputTitle.setValue(sg.word.verb.name);
+                        } else if (newValue == sg.dataTable.prefix + sg.word.adverb.id) {
+                            wordInputTitle.setValue(sg.word.adverb.name);
+                        } else if (newValue == sg.dataTable.prefix + sg.word.adjective.id) {
+                            wordInputTitle.setValue(sg.word.adjective.name);
+                        }
+
+                        var currentGenre = getCurrentGenre();
+                        dataTableTabBarTitleAddWordCount(currentGenre.id);
                     }
                 }
-            }
-        };
+            };
+        }
 
-        var nounDataTable = getWordDataTable(sg.word.noun, sg.genre.poetry);
-        var verbDataTable = getWordDataTable(sg.word.verb, sg.genre.poetry);
-        var adverbDataTable = getWordDataTable(sg.word.adverb, sg.genre.poetry);
-        var adjectiveDataTable = getWordDataTable(sg.word.adjective, sg.genre.poetry);
+//        var nounDataTable = getWordDataTable(sg.word.noun, sg.genre.poetry);
+//        var verbDataTable = getWordDataTable(sg.word.verb, sg.genre.poetry);
+//        var adverbDataTable = getWordDataTable(sg.word.adverb, sg.genre.poetry);
+//        var adjectiveDataTable = getWordDataTable(sg.word.adjective, sg.genre.poetry);
 
-        var wordLists = {
-            id:"data_table_cells",
-            cells:[
-                nounDataTable,
-                verbDataTable,
-                adverbDataTable,
-                adjectiveDataTable
-            ]
-        };
+        function getWordDataTableList(genre) {
+            return {
+                id:"data_table_cells", cells:[
+                    getWordDataTable(sg.word.noun, genre),
+                    getWordDataTable(sg.word.verb, genre),
+                    getWordDataTable(sg.word.adverb, genre),
+                    getWordDataTable(sg.word.adjective, genre)
+                ]
+            };
+        }
 
-        function createFavoriteRateContentContainer(rate) {
+        function createFavoriteRateContentContainer(rate, title) {
             $$("body_layout").removeView("content_container");
-            $$("body_layout").addView(getFavoriteRateContentContainer(rate));
+            $$("body_layout").addView(getFavoriteRateContentContainer(rate, title));
         }
 
         function createFavoriteNameContentContainer(categoryId, title) {
             $$("body_layout").removeView("content_container");
             $$("body_layout").addView(getFavoriteNameContentContainer(categoryId, title));
+        }
+
+        function createWordContentContainer(genre) {
+            $$("body_layout").removeView("content_container");
+            $$("body_layout").addView(getWordContentContainer(genre));
         }
 
         function getFavoriteRateMenu() {
@@ -663,7 +677,7 @@
                         selectedItemText = selectedItemText + " (" + this.getItem(rate).badge + ")";
 
                         if (isUndefined(favoriteDataTable)) {
-                            createFavoriteRateContentContainer(rate);
+                            createFavoriteRateContentContainer(rate, selectedItemText);
                         } else {
                             updateFavoriteTabViewTitle(selectedItemText);
                             updateFavoriteRateDataTable(rate);
@@ -724,13 +738,19 @@
             id: "side_menu", view: "menu", layout: "y", select: true, width: 240, data: getGenreData(),
             on: {
                 onMenuItemClick: function (id) {
-                    var selectedItem = this.getItem(id);
-                    var badgeValue = Number(selectedItem.badge);
-                    if (badgeValue > 0) {
-                        var selectedGenre = sg.genre[id];
-                        updateWordDataTable(selectedGenre);
+                    var selectedGenre = sg.genre[id];
+                    var wordListDataTable = $$(sg.dataTable.prefix + "noun");
+
+                    if (isUndefined(wordListDataTable)) {
+                        createWordContentContainer(selectedGenre);
                     } else {
-                        clearAllWordDataTable();
+                        var selectedItem = this.getItem(id);
+                        var badgeValue = Number(selectedItem.badge);
+                        if (badgeValue > 0) {
+                            updateWordDataTable(selectedGenre);
+                        } else {
+                            clearAllWordDataTable();
+                        }
                     }
                 },
                 onAfterSelect: function(id) {
@@ -747,29 +767,31 @@
             };
         }
 
-        function getFavoriteRateContentContainer(rate) {
+        function getFavoriteRateContentContainer(rate, title) {
             return {
                 id:"content_container", rows: [
-                    getFavoriteRateListTabView(rate)
+                    getFavoriteRateListTabView(rate, title)
                 ]
             };
         }
 
-        var contentContainer = {
-            id:"content_container", rows: [
-                wordInputForm,
-                {$template: "Spacer", height: 10},
-                wordListTabBar,
-                wordLists
-            ]
-        };
+        function getWordContentContainer(genre) {
+            return {
+                id:"content_container", rows: [
+                    wordInputForm,
+                    {$template: "Spacer", height: 10},
+                    getWordListTabBar(),
+                    getWordDataTableList(genre)
+                ]
+            };
+        }
 
         var bodyLayout = {
             id:"body_layout",
             cols: [
                 wordListMenu,
                 {$template: "Spacer", width: 10},
-                contentContainer
+                getWordContentContainer()
             ]
         };
 
