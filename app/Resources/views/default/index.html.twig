@@ -289,6 +289,19 @@
             return wordData;
         }
 
+        function updateGeneratedSentenceTabTitle(newTitle, count) {
+            var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
+
+            $tabbarTitleElements.each(function(index, elem) {
+                if (index == 1) {
+                    if (isUndefined(count) && !isUndefined(newTitle)) {
+                        $(elem).text(newTitle);
+                    } else {
+                        $(elem).text("즐겨찾기 (" + count + ")");
+                    }
+                }
+            });
+        }
         function getGeneratedSentenceDataTable(genre) {
             if (isUndefined(genre)) {
                 genre = sg.genre.poetry;
@@ -318,6 +331,8 @@
                         item.number = generatedSentenceFavoriteDataTable.count() + 1;
                         generatedSentenceFavoriteDataTable.add(item);
                         generatedSentenceFavoriteDataTable.addRowCss(item.id, "checked_row");
+
+                        updateGeneratedSentenceTabTitle(null, generatedSentenceFavoriteDataTable.count());
                     }
                 }
             }
@@ -872,40 +887,25 @@
                 ],
                 on: {
                     onChange: function(newValue, oldValue) {
-//                        var wordInputTitle = $$("word_input_title");
-//                        var $wordInputTitle = jQuery("div[view_id='word_input_form']");
-//                        $wordInputTitle.removeClass(oldValue).addClass(newValue);
-//                        if (newValue == sg.dataTable.prefix + sg.word.noun.id) {
-//                            wordInputTitle.setValue(sg.word.noun.name);
-//                        } else if (newValue == sg.dataTable.prefix + sg.word.verb.id) {
-//                            wordInputTitle.setValue(sg.word.verb.name);
-//                        } else if (newValue == sg.dataTable.prefix + sg.word.adverb.id) {
-//                            wordInputTitle.setValue(sg.word.adverb.name);
-//                        } else if (newValue == sg.dataTable.prefix + sg.word.adjective.id) {
-//                            wordInputTitle.setValue(sg.word.adjective.name);
-//                        }
-//
-//                        var titleArray = this.titleArray;
-//
-//                        var currentGenre = getCurrentGenre();
-//                        dataTableTabBarTitleAddWordCount(currentGenre.id, titleArray);
+                        var titleArray = this.titleArray;
+                        updateGeneratedSentenceTabTitle(titleArray[1]);
                     },
                     onBeforeTabClick : function() {
-//                        var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
-//
-//                        this.titleArray = [];
-//
-//                        var titleArray = this.titleArray;
-//                        $tabbarTitleElements.each(function(index, elem) {
-//                            var elemId = $(elem).attr("button_id");
-//                            var wordId = elemId.replace("dt_", "");
-//                            var word = sg.word[wordId];
-//
-//                            var originalText = $(elem).text();
-//                            if (originalText.indexOf("(") > -1) {
-//                                titleArray.push(originalText);
-//                            }
-//                        });
+                        var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
+
+                        this.titleArray = [];
+
+                        var titleArray = this.titleArray;
+                        $tabbarTitleElements.each(function(index, elem) {
+                            var elemId = $(elem).attr("button_id");
+                            var wordId = elemId.replace("dt_", "");
+                            var word = sg.word[wordId];
+
+                            var originalText = $(elem).text();
+                            if (originalText.indexOf("(") > -1) {
+                                titleArray.push(originalText);
+                            }
+                        });
                     }
                 }
             };
