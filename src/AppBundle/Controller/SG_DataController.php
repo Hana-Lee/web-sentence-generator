@@ -163,6 +163,24 @@ class SG_DataController extends Controller
         return new Response($count);
     }
 
+    /**
+     * @Route("/update/word")
+     *
+     */
+    public function updateWordAction()
+    {
+        $params = array();
+        $content = $this->get("request")->getContent();
+        if (!empty($content))
+        {
+            $params = json_decode($content, true); // 2nd param to get as array
+        }
+
+        $this->getWordRepository()->update($params["id"], $params["word"]);
+
+        return new Response("단어 업데이트 성공");
+    }
+
     private function getWordRepository()
     {
         return $this->getDoctrine()->getManager()->getRepository("AppBundle:Word");

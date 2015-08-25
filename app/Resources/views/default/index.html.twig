@@ -133,6 +133,26 @@
             }).show();
         }
 
+        function showUpdateCompletedPopup(message) {
+            webix.alert({
+                title:"확인",
+                type:"alert-error",
+                ok:"닫기",
+                text:message
+            });
+        }
+
+        function updateWord(data) {
+            webix.ajax().headers({
+                "Content-type":"application/json"
+            }).post("update/word", JSON.stringify(data), function(text, obj, response){
+                if (response.status === 200) {
+                    showUpdateCompletedPopup(text);
+                } else {
+                    showUpdateCompletedPopup("업데이트 실패");
+                }
+            });
+        }
         function getWordDataTable(word, genre) {
             if (isUndefined(genre)) {
                 genre = sg.genre.poetry;
@@ -141,22 +161,28 @@
                 id: sg.dataTable.prefix + word.id, view: "datatable", columns: [
                     {id: "number", header: "No.", width: 50, css: "t_center"},
                     {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
-                    {id: "word", header: "단어", sort:"string", fillspace: true},
+                    {id: "word", header: "단어", sort:"string", fillspace: true, editor:"text"},
                     {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
                 ],
+                editable:true,
                 data: getWordData(word, genre),
                 hover:"word_datatable_row_hover",
                 select:false,
                 on : {
                     onItemClick : function(id, event, node) {
-                        var item = this.getItem(id.row);
-                        item.status = !item.status;
-                        if (item.status) {
-                            this.addRowCss(id.row, "checked_row");
-                        } else {
-                            this.removeRowCss(id.row, "checked_row");
+                        if (id.column !== "word") {
+                            var item = this.getItem(id.row);
+                            item.status = !item.status;
+                            if (item.status) {
+                                this.addRowCss(id.row, "checked_row");
+                            } else {
+                                this.removeRowCss(id.row, "checked_row");
+                            }
+                            this.refresh(id.row);
                         }
-                        this.refresh(id.row);
+                    },
+                    onDataUpdate: function(id, data) {
+                        updateWord(data);
                     }
                 }
             }
