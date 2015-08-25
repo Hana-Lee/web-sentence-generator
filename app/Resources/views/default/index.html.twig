@@ -320,17 +320,21 @@
                     onItemClick : function(id, event, node) {
                         var item = this.getItem(id.row);
                         item.status = !item.status;
-                        if (item.status) {
-                            this.addRowCss(id.row, "checked_row");
-                        } else {
-                            this.removeRowCss(id.row, "checked_row");
-                        }
-                        this.refresh(id.row);
 
                         var generatedSentenceFavoriteDataTable = $$(sg.dataTable.prefix + "generated_sentence_favorite");
-                        item.number = generatedSentenceFavoriteDataTable.count() + 1;
-                        generatedSentenceFavoriteDataTable.add(item);
-                        generatedSentenceFavoriteDataTable.addRowCss(item.id, "checked_row");
+
+                        if (item.status) {
+                            this.addRowCss(id.row, "checked_row");
+
+                            item.number = generatedSentenceFavoriteDataTable.count() + 1;
+                            generatedSentenceFavoriteDataTable.add(item);
+                            generatedSentenceFavoriteDataTable.addRowCss(item.id, "checked_row");
+                        } else {
+                            this.removeRowCss(id.row, "checked_row");
+
+                            generatedSentenceFavoriteDataTable.remove(item.id);
+                        }
+                        this.refresh(id.row);
 
                         updateGeneratedSentenceTabTitle(null, generatedSentenceFavoriteDataTable.count());
                     }
