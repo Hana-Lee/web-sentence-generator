@@ -21,6 +21,10 @@ class FavoriteRepository extends EntityRepository
             ->setParameters(array("enabled" => 1, "parentId" => $parentId))
             ->getQuery()->getSingleScalarResult();
 
+        if (!$count) {
+            $count = 0;
+        }
+
         return $count;
     }
 
@@ -31,6 +35,10 @@ class FavoriteRepository extends EntityRepository
             ->from("AppBundle:Favorite", "f")->where("f.enabled = :enabled")->andWhere("f.rate = :rate")
             ->setParameters(array("enabled" => 1, "rate" => $rate))
             ->getQuery()->getSingleScalarResult();
+
+        if (!$count) {
+            $count = 0;
+        }
 
         return $count;
     }
@@ -45,10 +53,10 @@ class FavoriteRepository extends EntityRepository
             ->getQuery()->getResult(Query::HYDRATE_ARRAY);
 
         if (!$favorites) {
-            return array();
-        } else {
-            return $favorites;
+            $favorites = array();
         }
+
+        return $favorites;
     }
 
     public function findByParentId($parentId)
@@ -61,9 +69,35 @@ class FavoriteRepository extends EntityRepository
             ->getQuery()->getResult(Query::HYDRATE_ARRAY);
 
         if (!$favorites) {
-            return array();
-        } else {
-            return $favorites;
+            $favorites = array();
         }
+
+        return $favorites;
+    }
+
+    public function create($newValue, $parentId, $genreType, $created)
+    {
+        $newFavorite = new Favorite();
+        $newFavorite->setSentence($newValue);
+        $newFavorite->setParentId($parentId);
+        $newFavorite->setGenreType($genreType);
+        $newFavorite->setEnabled(1);
+        $newFavorite->setBackup(0);
+        $newFavorite->setRate(1);
+        $newFavorite->setCreated($created);
+
+        $this->getEntityManager()->persist($newFavorite);
+        $this->getEntityManager()->flush();
+
+        return $newFavorite;
+    }
+
+    public function delete($id)
+    {
+        $favorite = $this->find($id);
+        $favorite->setEnabled(0);
+
+//        $this->getEntityManager()->remove($favorite);
+        $this->getEntityManager()->flush();
     }
 }

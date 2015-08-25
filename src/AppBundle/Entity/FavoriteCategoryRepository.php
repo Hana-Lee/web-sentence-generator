@@ -23,9 +23,33 @@ class FavoriteCategoryRepository extends EntityRepository
             ->getQuery()->getResult(Query::HYDRATE_ARRAY);
 
         if (!$favoriteCategories) {
-            return array();
-        } else {
-            return $favoriteCategories;
+            $favoriteCategories = array();
         }
+
+        return $favoriteCategories;
+    }
+
+    public function create($name, $created, $genreType)
+    {
+        $newFavoriteCategory = new FavoriteCategory();
+        $newFavoriteCategory->setName($name);
+        $newFavoriteCategory->setRate(1);
+        $newFavoriteCategory->setCreated($created);
+        $newFavoriteCategory->setBackup(0);
+        $newFavoriteCategory->setEnabled(1);
+        $newFavoriteCategory->setGenreType($genreType);
+
+        $this->getEntityManager()->persist($newFavoriteCategory);
+        $this->getEntityManager()->flush();
+
+        return $newFavoriteCategory;
+    }
+
+    public function delete($id)
+    {
+        $favoriteCategory = $this->find($id);
+        $favoriteCategory->setEnabled(0);
+
+        $this->getEntityManager()->flush();
     }
 }
