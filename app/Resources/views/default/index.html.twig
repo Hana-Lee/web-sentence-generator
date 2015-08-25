@@ -63,7 +63,7 @@
             background-color: #DDFFDD;
         }
         .webix_column.sentence .webix_cell {
-            font-size: 12px;
+            font-size: 14px;
         }
         .webix_cell p {
             margin: 0;
@@ -96,11 +96,13 @@
             nursery_rime : {id:"nursery_rime", name:"동시", code:1},
             novel : {id:"novel", name:"소설", code:2},
             essay : {id:"essay", name:"수필", code:3},
-            fairy_tail : {id: "fairy_tail", name : "동화", code:4}
+            fairy_tail : {id: "fairy_tail", name : "동화", code:4},
+            etc : {id: "etc", name : "기타", code:5}
         };
 
         var sgContext = {
-            currentMenuId : "show_word"
+            currentMenuId : "show_word",
+            totalGeneratedCount : 30
         };
 
         var sgRateCharacter = {
@@ -143,11 +145,168 @@
                     {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
                 ],
                 data: getWordData(word, genre),
-                schema:{
-                    $change:function(item) {
-                        console.log(item);
+                hover:"word_datatable_row_hover",
+                select:false,
+                on : {
+                    onItemClick : function(id, event, node) {
+                        var item = this.getItem(id.row);
+                        item.status = !item.status;
+                        if (item.status) {
+                            this.addRowCss(id.row, "checked_row");
+                        } else {
+                            this.removeRowCss(id.row, "checked_row");
+                        }
+                        this.refresh(id.row);
                     }
-                },
+                }
+            }
+        }
+
+        function getGeneratedSentence(genre) {
+            var wordData = getWordDataByGenre(genre);
+            var totalSentenceCount = sg.context.totalGeneratedCount;
+            var result = [];
+            var newWordData = [];
+            if (wordData.length === 4) {
+                var wordList;
+
+                var wordDataCount = wordData.length;
+                for (var i = 0; i < wordDataCount; i++) {
+                    if (wordData.length > 1) {
+                        var randomNumber = getRandomNumber(wordData.length);
+                        wordList = wordData.splice(randomNumber, 1)[0];
+                    } else {
+                        wordList = wordData[0];
+                    }
+
+                    var mixedWordList = mixingWord(wordList, totalSentenceCount);
+                    newWordData.push(mixedWordList);
+                }
+            }
+
+            var createdDate = new Date();
+            var createdTimestamp = createdDate.getTime();
+
+            for (var j = 0; j < totalSentenceCount; j++) {
+                var firstWordList = newWordData[0];
+                var secondWordList = newWordData[1];
+                var thirdWordList = newWordData[2];
+                var fourthWordList = newWordData[3];
+
+                var generatedSentenceArray = [];
+                generatedSentenceArray.push(wordDecoration(firstWordList[j]).word);
+                generatedSentenceArray.push(wordDecoration(secondWordList[j]).word);
+                generatedSentenceArray.push(wordDecoration(thirdWordList[j]).word);
+                generatedSentenceArray.push(wordDecoration(fourthWordList[j]).word);
+
+                var generatedSentence = '<p dir="ltr">' + generatedSentenceArray.join(" ") + '</p>';
+
+                var sentenceData = {id:j, number:j+1, status:0, sentence:generatedSentence, star:sg.rateCharacter[1], created:createdDate, timestamp:createdTimestamp};
+
+                result.push(sentenceData);
+            }
+
+            return result;
+        }
+
+        function wordDecoration(word) {
+            switch (word.wordType) {
+                case sg.word.noun.code:
+                    word.word = '<font color="#CD812B">' + word.word + '</fond>';
+                    break;
+                case sg.word.verb.code:
+                    word.word = '<font color="#F17075">' + word.word + '</fond>';
+                    break;
+                case sg.word.adverb.code:
+                    word.word = '<font color="#7B6A97">' + word.word + '</fond>';
+                    break;
+                case sg.word.adjective.code:
+                    word.word = '<font color="#608F63">' + word.word + '</fond>';
+                    break;
+            }
+
+            return word;
+        }
+
+        function mixingWord(wordList, totalCount) {
+            if (isUndefined(totalCount)) {
+                totalCount = 30;
+            }
+
+            var result = [];
+            for (var i = 0; i < totalCount; i++) {
+                var randomNumber = getRandomNumber(wordList.length);
+                result.push(wordList[randomNumber]);
+            }
+
+            return result;
+        }
+
+        function getRandomNumber(range) {
+            var result = 0;
+            for (var i = 0; i < 99; i++) {
+                result = parseInt(Math.random() * range, 10);
+            }
+
+            return result;
+        }
+
+        function getWordDataByGenre(genre) {
+            var wordData = [];
+
+            for (var key in sg.word) {
+                if (sg.word.hasOwnProperty(key)) {
+                    wordData.push(getWordData(sg.word[key], genre));
+                }
+            }
+
+            return wordData;
+        }
+
+        function getGeneratedSentenceDataTable(genre) {
+            if (isUndefined(genre)) {
+                genre = sg.genre.poetry;
+            }
+            return {
+                id: sg.dataTable.prefix + "generated_sentence", view: "datatable", columns: [
+                    {id: "number", header: "No.", width: 50, css: "t_center"},
+                    {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
+                    {id: "sentence", header: "문장", sort:"string", fillspace: true},
+                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
+                ],
+                data: getGeneratedSentence(genre),
+                hover:"word_datatable_row_hover",
+                select:false,
+                on : {
+                    onItemClick : function(id, event, node) {
+                        var item = this.getItem(id.row);
+                        item.status = !item.status;
+                        if (item.status) {
+                            this.addRowCss(id.row, "checked_row");
+                        } else {
+                            this.removeRowCss(id.row, "checked_row");
+                        }
+                        this.refresh(id.row);
+
+                        var generatedSentenceFavoriteDataTable = $$(sg.dataTable.prefix + "generated_sentence_favorite");
+                        item.number = generatedSentenceFavoriteDataTable.count() + 1;
+                        generatedSentenceFavoriteDataTable.add(item);
+                        generatedSentenceFavoriteDataTable.addRowCss(item.id, "checked_row");
+                    }
+                }
+            }
+        }
+
+        function getGeneratedSentenceFavoriteDataTable() {
+            return {
+                id: sg.dataTable.prefix + "generated_sentence_favorite", view: "datatable", columns: [
+                    {id: "number", header: "No.", width: 50, css: "t_center"},
+                    {id: "status", header: {content: "masterCheckbox"}, template: "{common.checkbox()}", width: 40},
+                    {id: "sentence", header: "문장", sort:"string", fillspace: true, css:"sentence"},
+                    {id: "star", header: "평가", sort:"string", width: 100, css: "t_center"},
+                    {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
+                ],
+                data: [],
                 hover:"word_datatable_row_hover",
                 select:false,
                 on : {
@@ -174,11 +333,6 @@
                     {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
                 ],
                 data: getFavoriteItemByRate(rate),
-                schema:{
-                    $change:function(item) {
-                        console.log(item);
-                    }
-                },
                 hover:"word_datatable_row_hover",
                 select:false,
                 on : {
@@ -206,11 +360,6 @@
                     {id: "created", header: "만든날", sort:"int", format:webix.i18n.fullDateFormatStr, width: 140, css: "t_center"}
                 ],
                 data: getFavoriteItemByCategoryId(categoryId),
-                schema:{
-                    $change:function(item) {
-                        console.log(item);
-                    }
-                },
                 hover:"word_datatable_row_hover",
                 select:false,
                 on : {
@@ -263,10 +412,18 @@
             return getWordCountInGenreFromServer(genre);
         }
 
-        function getGenreData() {
+        function getGenreData(isIncludeEtc) {
+            if (isUndefined(isIncludeEtc)) {
+                isIncludeEtc = false;
+            }
+
             var result = [];
             for(var key in sg.genre) {
                 if (sg.genre.hasOwnProperty(key)) {
+                    if (!isIncludeEtc && key === "etc") {
+                        break;
+                    }
+
                     var genre = sg.genre[key];
                     var count = getWordCountInGenre(genre);
                     result.push({id:genre.id, icon:"support", value : genre.name, badge:count});
@@ -299,6 +456,14 @@
             }
         }
 
+        function updateGeneratedSentenceDataTable(genre) {
+            var generatedWordData = getGeneratedSentence(genre);
+
+            clearAllGeneratedSentenceDataTable();
+
+            $$(sg.dataTable.prefix + "generated_sentence").parse(generatedWordData);
+        }
+
         function clearAllWordDataTable() {
             var availableWords = sg.word;
             for(var key in availableWords) {
@@ -306,6 +471,11 @@
                     $$(sg.dataTable.prefix + availableWords[key].id).clearAll();
                 }
             }
+        }
+
+        function clearAllGeneratedSentenceDataTable() {
+            $$(sg.dataTable.prefix + "generated_sentence").clearAll();
+            $$(sg.dataTable.prefix + "generated_sentence_favorite").clearAll();
         }
 
         function createNewWordData(newWordValue) {
@@ -464,23 +634,29 @@
             return sg.genre[selectedItem.id];
         }
 
-        function dataTableTabBarTitleAddWordCount(genreId) {
+        function dataTableTabBarTitleAddWordCount(genreId, titleArray) {
             var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
 
             $tabbarTitleElements.each(function(index, elem) {
-                var elemId = $(elem).attr("button_id");
-                var wordId = elemId.replace("dt_", "");
-                var word = sg.word[wordId];
-                var genre;
-                if (isUndefined(genreId)) {
-                    genre = getCurrentGenre();
-                } else {
-                    genre = sg.genre[genreId];
-                }
+                var newText;
+                if (isUndefined(titleArray)) {
+                    var elemId = $(elem).attr("button_id");
+                    var wordId = elemId.replace("dt_", "");
+                    var word = sg.word[wordId];
+                    var genre;
+                    if (isUndefined(genreId)) {
+                        genre = getCurrentGenre();
+                    } else {
+                        genre = sg.genre[genreId];
+                    }
 
-                var wordCount = getWordCountByWordTypeAndGenreType(word, genre);
-                var originalText = $(elem).text();
-                $(elem).text(word.name + "(" + wordCount + ")");
+                    var wordCount = getWordCountByWordTypeAndGenreType(word, genre);
+                    var originalText = $(elem).text();
+                    newText = word.name + "(" + wordCount + ")";
+                } else {
+                    newText = titleArray[index];
+                }
+                $(elem).text(newText);
             });
         }
 
@@ -549,6 +725,18 @@
 //                            hideWaitDialog();
                         }
                     }
+                },
+                {
+                    id:"show_setting", view:"button", type:"icon", icon:"cog", label:"설정", width:100, align:"left", on:{
+                    onItemClick:function(id) {
+//                            showWaitDialog();
+                        showLovePopup();
+
+                        sg.context.currentMenuId = "show_setting";
+
+//                            hideWaitDialog();
+                    }
+                }
                 }
             ]
         };
@@ -562,7 +750,8 @@
                             id: "new_word_input", view: "text", label: "", on:{
                                 onKeyPress: function(keyCode, event) {
                                     if (keyCode === 13) {
-                                        showLovePopup();
+//                                        showLovePopup();
+                                        createNewWord();
                                     }
                                 }
                             }
@@ -623,8 +812,74 @@
                             wordInputTitle.setValue(sg.word.adjective.name);
                         }
 
+                        var titleArray = this.titleArray;
+
                         var currentGenre = getCurrentGenre();
-                        dataTableTabBarTitleAddWordCount(currentGenre.id);
+                        dataTableTabBarTitleAddWordCount(currentGenre.id, titleArray);
+                    },
+                    onBeforeTabClick : function() {
+                        var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
+
+                        this.titleArray = [];
+
+                        var titleArray = this.titleArray;
+                        $tabbarTitleElements.each(function(index, elem) {
+                            var elemId = $(elem).attr("button_id");
+                            var wordId = elemId.replace("dt_", "");
+                            var word = sg.word[wordId];
+
+                            var originalText = $(elem).text();
+                            if (originalText.indexOf("(") > -1) {
+                                titleArray.push(originalText);
+                            }
+                        });
+                    }
+                }
+            };
+        }
+
+        function getGeneratedSentenceListTabBar() {
+            return {
+                id:sg.dataTable.prefix + "tabbar", view: "tabbar", value:sg.dataTable.prefix + "generated_sentence", multiview:true, options: [
+                    {id: sg.dataTable.prefix + "generated_sentence", value: "창조된 문장들 (" + sg.context.totalGeneratedCount + ")"},
+                    {id: sg.dataTable.prefix + "generated_sentence_favorite", value: "즐겨찾기 (0)"}
+                ],
+                on: {
+                    onChange: function(newValue, oldValue) {
+//                        var wordInputTitle = $$("word_input_title");
+//                        var $wordInputTitle = jQuery("div[view_id='word_input_form']");
+//                        $wordInputTitle.removeClass(oldValue).addClass(newValue);
+//                        if (newValue == sg.dataTable.prefix + sg.word.noun.id) {
+//                            wordInputTitle.setValue(sg.word.noun.name);
+//                        } else if (newValue == sg.dataTable.prefix + sg.word.verb.id) {
+//                            wordInputTitle.setValue(sg.word.verb.name);
+//                        } else if (newValue == sg.dataTable.prefix + sg.word.adverb.id) {
+//                            wordInputTitle.setValue(sg.word.adverb.name);
+//                        } else if (newValue == sg.dataTable.prefix + sg.word.adjective.id) {
+//                            wordInputTitle.setValue(sg.word.adjective.name);
+//                        }
+//
+//                        var titleArray = this.titleArray;
+//
+//                        var currentGenre = getCurrentGenre();
+//                        dataTableTabBarTitleAddWordCount(currentGenre.id, titleArray);
+                    },
+                    onBeforeTabClick : function() {
+//                        var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
+//
+//                        this.titleArray = [];
+//
+//                        var titleArray = this.titleArray;
+//                        $tabbarTitleElements.each(function(index, elem) {
+//                            var elemId = $(elem).attr("button_id");
+//                            var wordId = elemId.replace("dt_", "");
+//                            var word = sg.word[wordId];
+//
+//                            var originalText = $(elem).text();
+//                            if (originalText.indexOf("(") > -1) {
+//                                titleArray.push(originalText);
+//                            }
+//                        });
                     }
                 }
             };
@@ -646,6 +901,15 @@
             };
         }
 
+        function getGeneratedSentenceDataTableList(genre) {
+            return {
+                id:"data_table_cells", cells:[
+                    getGeneratedSentenceDataTable(genre),
+                    getGeneratedSentenceFavoriteDataTable()
+                ]
+            };
+        }
+
         function createFavoriteRateContentContainer(rate, title) {
             $$("body_layout").removeView("content_container");
             $$("body_layout").addView(getFavoriteRateContentContainer(rate, title));
@@ -659,6 +923,11 @@
         function createWordContentContainer(genre) {
             $$("body_layout").removeView("content_container");
             $$("body_layout").addView(getWordContentContainer(genre));
+        }
+
+        function createGeneratedSentenceContentContainer(genre) {
+            $$("body_layout").removeView("content_container");
+            $$("body_layout").addView(getGeneratedSentenceContentContainer(genre));
         }
 
         function getFavoriteRateMenu() {
@@ -723,12 +992,23 @@
 
         function getGenerateMenu() {
             return {
-                id: "side_menu", view: "menu", layout: "y", select:true, width: 240, data: [
-                    {id: 1, icon: "support", value: "문장생성", badge: "12"}
-                ],
+                id: "side_menu", view: "menu", layout: "y", select:true, width: 240, data: getGenreData(true),
                 on: {
                     onMenuItemClick: function (id) {
-                        console.log(id);
+                        var selectedGenre = sg.genre[id];
+                        var generatedSentenceDataTable = $$(sg.dataTable.prefix + "generated_sentence");
+
+                        if (isUndefined(generatedSentenceDataTable)) {
+                            createGeneratedSentenceContentContainer(selectedGenre);
+                        } else {
+                            var selectedItem = this.getItem(id);
+                            var badgeValue = Number(selectedItem.badge);
+                            if (badgeValue > 0) {
+                                updateGeneratedSentenceDataTable(selectedGenre);
+                            } else {
+                                clearAllGeneratedSentenceDataTable();
+                            }
+                        }
                     }
                 }
             };
@@ -782,6 +1062,15 @@
                     {$template: "Spacer", height: 10},
                     getWordListTabBar(),
                     getWordDataTableList(genre)
+                ]
+            };
+        }
+
+        function getGeneratedSentenceContentContainer(genre) {
+            return {
+                id:"content_container", rows: [
+                    getGeneratedSentenceListTabBar(),
+                    getGeneratedSentenceDataTableList(genre)
                 ]
             };
         }

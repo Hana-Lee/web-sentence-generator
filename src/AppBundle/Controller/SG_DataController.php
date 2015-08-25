@@ -52,7 +52,11 @@ class SG_DataController extends Controller
      */
     public function genreCountAction($genreType)
     {
-        $genreCount = $this->getWordRepository()->getCountByGenreType($genreType);
+        if ($genreType == self::GENRE_ETC) {
+            $genreCount = $this->getWordRepository()->getCount();
+        } else {
+            $genreCount = $this->getWordRepository()->getCountByGenreType($genreType);
+        }
 
         return new Response($genreCount);
     }

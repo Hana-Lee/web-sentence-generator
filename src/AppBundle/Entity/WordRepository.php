@@ -30,6 +30,20 @@ class WordRepository extends EntityRepository
         return $words;
     }
 
+    public function getCount()
+    {
+        $count = $this->getEntityManager()->createQueryBuilder()
+            ->select("count(w)")
+            ->from("AppBundle:Word", "w")
+            ->getQuery()->getSingleScalarResult();
+
+        if (!$count) {
+            $count = 0;
+        }
+
+        return $count;
+    }
+
     public function getCountByGenreType($genreType)
     {
         $count = $this->getEntityManager()->createQueryBuilder()
