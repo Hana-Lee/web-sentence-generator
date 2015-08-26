@@ -427,7 +427,7 @@
             var statusCode = jsonData.status;
             var result = [];
             if (statusCode === 200) {
-                result = JSON.parse(jsonData["response"]);
+                result = JSON.parse(jsonData["responseText"]);
                 var count = 1;
                 $(result).each(function(index, value) {
                     value["status"] = 0;
@@ -448,7 +448,7 @@
             var statusCode = countData.status;
             var result = 0;
             if (statusCode === 200) {
-                result = countData.response;
+                result = countData.responseText;
             }
             return result;
         }
@@ -550,7 +550,7 @@
             var newWordResponseData = webix.ajax().sync().post("new/word/" + word.code + "/" + genre.code + "/" + newWord + "/" + currentTime);
             var result = {};
             if (newWordResponseData.status === 200) {
-                var jsonData = JSON.parse(newWordResponseData.response);
+                var jsonData = JSON.parse(newWordResponseData.responseText);
                 jsonData["status"] = 0;
                 jsonData["number"] = 0;
                 jsonData["created"] = new Date(Number(jsonData["created"]));
@@ -565,7 +565,7 @@
             var itemCountResult = webix.ajax().sync().post("get/favorite/rate/count/" + rate);
             var result = 0;
             if (itemCountResult.status === 200) {
-                result = itemCountResult.response;
+                result = itemCountResult.responseText;
             }
 
             return result;
@@ -575,7 +575,7 @@
             var favoriteCategoriesResult = webix.ajax().sync().post("get/favorite/category");
             var result = [];
             if (favoriteCategoriesResult.status === 200) {
-                result = JSON.parse(favoriteCategoriesResult.response);
+                result = JSON.parse(favoriteCategoriesResult.responseText);
 
                 $(result).each(function(index, category) {
                     category["value"] = category.name;
@@ -593,7 +593,7 @@
             var favoriteCategoryItemCountResult = webix.ajax().sync().post("get/favorite/category/item/count/" + categoryId);
             var result = 0;
             if (favoriteCategoryItemCountResult.status === 200) {
-                result = favoriteCategoryItemCountResult.response;
+                result = favoriteCategoryItemCountResult.responseText;
             }
 
             return result;
@@ -604,7 +604,7 @@
 
             var result = [];
             if (favoriteItemResult.status === 200) {
-                result = JSON.parse(favoriteItemResult.response);
+                result = JSON.parse(favoriteItemResult.responseText);
 
                 var count = 1;
                 $(result).each(function(index, favorite) {
@@ -626,7 +626,7 @@
 
             var result = [];
             if (favoriteItemResult.status === 200) {
-                result = JSON.parse(favoriteItemResult.response);
+                result = JSON.parse(favoriteItemResult.responseText);
 
                 var count = 1;
                 $(result).each(function(index, favorite) {
@@ -668,7 +668,7 @@
             var result = 0;
 
             if (wordCountResult.status === 200) {
-                result = wordCountResult.response;
+                result = wordCountResult.responseText;
             }
 
             return result;
@@ -1121,6 +1121,7 @@
         function getGeneratedSentenceContentContainer(genre) {
             return {
                 id:"content_container", rows: [
+                    {view:"navbar", value:"manager"},
                     getGeneratedSentenceListTabBar(),
                     getGeneratedSentenceDataTableList(genre)
                 ]
