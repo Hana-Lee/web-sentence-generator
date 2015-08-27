@@ -7,8 +7,8 @@
  */
 namespace AppBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
 
 class SG_DataController extends Controller
@@ -98,7 +98,8 @@ class SG_DataController extends Controller
      *
      * @return Response
      */
-    public function favoriteCategoryAction() {
+    public function favoriteCategoryAction()
+    {
         $favoriteCategoryArray = $this->getFavoriteCategoryRepository()->findByEnabled();
 
         return new Response(json_encode($favoriteCategoryArray));
@@ -175,8 +176,7 @@ class SG_DataController extends Controller
     {
         $params = array();
         $content = $this->get("request")->getContent();
-        if (!empty($content))
-        {
+        if (!empty($content)) {
             $params = json_decode($content, true); // 2nd param to get as array
         }
 
@@ -237,14 +237,12 @@ class Serializer
         $className = get_class($entityObject);
         $metaData = $this->_em->getClassMetadata($className);
 
-        foreach ($metaData->fieldMappings as $field => $mapping)
-        {
+        foreach ($metaData->fieldMappings as $field => $mapping) {
             $method = "get" . ucfirst($field);
             $data[$field] = call_user_func(array($entityObject, $method));
         }
 
-        foreach ($metaData->associationMappings as $field => $mapping)
-        {
+        foreach ($metaData->associationMappings as $field => $mapping) {
             // Sort of entity object
             $object = $metaData->reflFields[$field]->getValue($entityObject);
 

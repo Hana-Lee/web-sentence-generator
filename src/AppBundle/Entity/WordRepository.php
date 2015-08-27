@@ -84,6 +84,7 @@ class WordRepository extends EntityRepository
         $newWord->setGenreType($genreType);
         $newWord->setBackup(0);
         $newWord->setCreated($created);
+        $newWord->setModified(0);
 
         $this->getEntityManager()->persist($newWord);
         $this->getEntityManager()->flush();
@@ -111,6 +112,7 @@ class WordRepository extends EntityRepository
     {
         $word = $this->find($id);
         $word->setWord($newValue);
+        $word->setModified(1);
 
         $this->getEntityManager()->flush();
 

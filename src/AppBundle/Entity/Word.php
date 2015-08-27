@@ -46,6 +46,13 @@ class Word
     private $genreType;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     */
+    private $modified;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="text")
@@ -60,7 +67,7 @@ class Word
     private $backup;
 
     /**
-     * Get id
+     * Get word id
      *
      * @return integer
      */
@@ -136,6 +143,29 @@ class Word
     public function getGenreType()
     {
         return $this->genreType;
+    }
+
+    /**
+     * Set modified
+     *
+     * @param integer $modified
+     * @return Word
+     */
+    public function setModified($modified)
+    {
+        $this->modified = $modified;
+
+        return $this;
+    }
+
+    /**
+     * Get modified
+     *
+     * @return integer
+     */
+    public function getModified()
+    {
+        return $this->modified;
     }
 
     /**

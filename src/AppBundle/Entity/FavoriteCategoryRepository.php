@@ -38,6 +38,7 @@ class FavoriteCategoryRepository extends EntityRepository
         $newFavoriteCategory->setBackup(0);
         $newFavoriteCategory->setEnabled(1);
         $newFavoriteCategory->setGenreType($genreType);
+        $newFavoriteCategory->setModified(0);
 
         $this->getEntityManager()->persist($newFavoriteCategory);
         $this->getEntityManager()->flush();

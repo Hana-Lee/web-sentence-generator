@@ -16,6 +16,8 @@ use Doctrine\ORM\Mapping as ORM;
 class FavoriteCategory
 {
     /**
+     * @var integer
+     *
      * @ORM\Column(name="_id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -23,37 +25,58 @@ class FavoriteCategory
     private $id;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
     private $name;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(name="genre", type="integer")
      */
     private $genreType;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer")
      */
     private $rate;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer")
      */
     private $enabled;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
     private $created;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer")
      */
     private $backup;
 
     /**
-     * @return mixed
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     */
+    private $modified;
+
+    /**
+     * Get Favorite category ID
+     *
+     * @return integer
      */
     public function getId()
     {
@@ -61,7 +84,9 @@ class FavoriteCategory
     }
 
     /**
-     * @return mixed
+     * Get Favorite category name
+     *
+     * @return string
      */
     public function getName()
     {
@@ -69,15 +94,22 @@ class FavoriteCategory
     }
 
     /**
-     * @param mixed $name
+     * Set Favorite category name
+     *
+     * @param string $name
+     * @return FavoriteCategory
      */
     public function setName($name)
     {
         $this->name = $name;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get genre type
+     *
+     * @return integer
      */
     public function getGenreType()
     {
@@ -85,15 +117,22 @@ class FavoriteCategory
     }
 
     /**
-     * @param mixed $genreType
+     * Set genre type
+     *
+     * @param integer $genreType
+     * @return FavoriteCategory
      */
     public function setGenreType($genreType)
     {
         $this->genreType = $genreType;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get rate
+     *
+     * @return integer
      */
     public function getRate()
     {
@@ -101,15 +140,22 @@ class FavoriteCategory
     }
 
     /**
-     * @param mixed $rate
+     * Set rate
+     *
+     * @param integer $rate
+     * @return FavoriteCategory
      */
     public function setRate($rate)
     {
         $this->rate = $rate;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get enabled
+     *
+     * @return integer
      */
     public function getEnabled()
     {
@@ -117,15 +163,22 @@ class FavoriteCategory
     }
 
     /**
-     * @param mixed $enabled
+     * Set enabled
+     *
+     * @param integer $enabled
+     * @return FavoriteCategory
      */
     public function setEnabled($enabled)
     {
         $this->enabled = $enabled;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get created timestamp
+     *
+     * @return string
      */
     public function getCreated()
     {
@@ -133,15 +186,22 @@ class FavoriteCategory
     }
 
     /**
-     * @param mixed $created
+     * Set created timestamp
+     *
+     * @param string $created
+     * @return FavoriteCategory
      */
     public function setCreated($created)
     {
         $this->created = $created;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get backup
+     *
+     * @return integer
      */
     public function getBackup()
     {
@@ -149,10 +209,38 @@ class FavoriteCategory
     }
 
     /**
-     * @param mixed $backup
+     * Set backup
+     *
+     * @param integer $backup
+     * @return FavoriteCategory
      */
     public function setBackup($backup)
     {
         $this->backup = $backup;
+
+        return $this;
+    }
+
+    /**
+     * Get modified
+     *
+     * @return integer
+     */
+    public function getModified()
+    {
+        return $this->modified;
+    }
+
+    /**
+     * Set modified
+     *
+     * @param integer $modified
+     * @return FavoriteCategory
+     */
+    public function setModified($modified)
+    {
+        $this->modified = $modified;
+
+        return $this;
     }
 }

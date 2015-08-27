@@ -85,6 +85,7 @@ class FavoriteRepository extends EntityRepository
         $newFavorite->setBackup(0);
         $newFavorite->setRate(1);
         $newFavorite->setCreated($created);
+        $newFavorite->setModified(0);
 
         $this->getEntityManager()->persist($newFavorite);
         $this->getEntityManager()->flush();

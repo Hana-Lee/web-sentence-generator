@@ -16,6 +16,8 @@ use Doctrine\ORM\Mapping as ORM;
 class Favorite
 {
     /**
+     * @var integer
+     *
      * @ORM\Column(name="_id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -23,42 +25,65 @@ class Favorite
     private $id;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(name="parent", type="integer")
      */
     private $parentId;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
     private $sentence;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(name="genre", type="integer")
      */
     private $genreType;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer")
      */
     private $rate;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer")
      */
     private $enabled;
 
     /**
+     * @var string
+     *
      * @ORM\Column(type="text")
      */
     private $created;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer")
      */
     private $backup;
 
     /**
-     * @return mixed
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     */
+    private $modified;
+
+    /**
+     * Get favorite ID
+     *
+     * @return integer
      */
     public function getId()
     {
@@ -66,7 +91,9 @@ class Favorite
     }
 
     /**
-     * @return mixed
+     * Get parent ID
+     *
+     * @return integer
      */
     public function getParentId()
     {
@@ -74,15 +101,22 @@ class Favorite
     }
 
     /**
-     * @param mixed $parentId
+     * Set parent ID
+     *
+     * @param integer $parentId
+     * @return Favorite
      */
     public function setParentId($parentId)
     {
         $this->parentId = $parentId;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get sentence
+     *
+     * @return string
      */
     public function getSentence()
     {
@@ -90,15 +124,22 @@ class Favorite
     }
 
     /**
-     * @param mixed $sentence
+     * Set sentence
+     *
+     * @param string $sentence
+     * @return Favorite
      */
     public function setSentence($sentence)
     {
         $this->sentence = $sentence;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get genre type
+     *
+     * @return integer
      */
     public function getGenreType()
     {
@@ -106,15 +147,22 @@ class Favorite
     }
 
     /**
-     * @param mixed $genreType
+     * Set genre type
+     *
+     * @param integer $genreType
+     * @return Favorite
      */
     public function setGenreType($genreType)
     {
         $this->genreType = $genreType;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get rate
+     *
+     * @return integer
      */
     public function getRate()
     {
@@ -122,15 +170,22 @@ class Favorite
     }
 
     /**
-     * @param mixed $rate
+     * Set rate
+     *
+     * @param integer $rate
+     * @return Favorite
      */
     public function setRate($rate)
     {
         $this->rate = $rate;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get enabled
+     *
+     * @return integer
      */
     public function getEnabled()
     {
@@ -138,15 +193,22 @@ class Favorite
     }
 
     /**
-     * @param mixed $enabled
+     * Set enabled
+     *
+     * @param integer $enabled
+     * @return Favorite
      */
     public function setEnabled($enabled)
     {
         $this->enabled = $enabled;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get created timestamp
+     *
+     * @return string
      */
     public function getCreated()
     {
@@ -154,15 +216,22 @@ class Favorite
     }
 
     /**
-     * @param mixed $created
+     * Set create timestamp
+     *
+     * @param string $created
+     * @return Favorite
      */
     public function setCreated($created)
     {
         $this->created = $created;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * Get backup
+     *
+     * @return integer
      */
     public function getBackup()
     {
@@ -170,10 +239,38 @@ class Favorite
     }
 
     /**
-     * @param mixed $backup
+     * Set backup
+     *
+     * @param integer $backup
+     * @return Favorite
      */
     public function setBackup($backup)
     {
         $this->backup = $backup;
+
+        return $this;
+    }
+
+    /**
+     * Get modified
+     *
+     * @return integer
+     */
+    public function getModified()
+    {
+        return $this->modified;
+    }
+
+    /**
+     * Set modified
+     *
+     * @param integer $modified
+     * @return Favorite
+     */
+    public function setModified($modified)
+    {
+        $this->modified = $modified;
+
+        return $this;
     }
 }
