@@ -185,6 +185,45 @@ class SG_DataController extends Controller
         return new Response("단어 업데이트 성공");
     }
 
+    /**
+     * @Route("/delete/word/{wordId}")
+     *
+     * @param $wordId
+     * @return Response
+     */
+    public function deleteWordAction($wordId)
+    {
+        $this->getWordRepository()->delete($wordId);
+
+        return new Response("단어 삭제 성공");
+    }
+
+    /**
+     * @Route("/delete/favorite/{favoriteId}")
+     *
+     * @param $favoriteId
+     * @return Response
+     */
+    public function deleteFavoriteAction($favoriteId)
+    {
+        $this->getFavoriteRepository()->delete($favoriteId);
+
+        return new Response("즐겨찾기 삭제 성공");
+    }
+
+    /**
+     * @Route("/delete/favorite/category/{favoriteCategoryId}")
+     *
+     * @param $favoriteCategoryId
+     * @return Response
+     */
+    public function deleteFavoriteCategoryAction($favoriteCategoryId)
+    {
+        $this->getFavoriteCategoryRepository()->delete($favoriteCategoryId);
+
+        return new Response("즐겨찾기 카테고리 삭제 성공");
+    }
+
     private function getWordRepository()
     {
         return $this->getDoctrine()->getManager()->getRepository("AppBundle:Word");
