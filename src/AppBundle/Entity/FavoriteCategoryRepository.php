@@ -50,6 +50,7 @@ class FavoriteCategoryRepository extends EntityRepository
     {
         $favoriteCategory = $this->find($id);
         $favoriteCategory->setEnabled(0);
+        $favoriteCategory->setModified(1);
 
         $this->getEntityManager()->flush();
     }

@@ -67,6 +67,13 @@ class Word
     private $backup;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     */
+    private $enabled;
+
+    /**
      * Get word id
      *
      * @return integer
@@ -213,4 +220,28 @@ class Word
     {
         return $this->backup;
     }
+
+    /**
+     * Get enabled
+     *
+     * @return integer
+     */
+    public function getEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * Set enabled
+     *
+     * @param integer $enabled
+     * @return Word
+     */
+    public function setEnabled($enabled)
+    {
+        $this->enabled = $enabled;
+
+        return $this;
+    }
+
 }

@@ -18,9 +18,9 @@ class WordRepository extends EntityRepository
         $words = $this->getEntityManager()->createQueryBuilder()
             ->select("w")
             ->from("AppBundle:Word", "w")
-            ->where("w.wordType = :wordType")->andWhere("w.genreType = :genreType")
+            ->where("w.wordType = :wordType")->andWhere("w.genreType = :genreType")->andWhere("w.enabled = :enabled")
             ->orderBy("w.word", "ASC")->addOrderBy("w.created", "DESC")
-            ->setParameters(array("wordType" => $wordType, "genreType" => $genreType))
+            ->setParameters(array("wordType" => $wordType, "genreType" => $genreType, "enabled" => 1))
             ->getQuery()->getResult(Query::HYDRATE_ARRAY);
 
         if (!$words) {
@@ -35,9 +35,9 @@ class WordRepository extends EntityRepository
         $words = $this->getEntityManager()->createQueryBuilder()
             ->select("w")
             ->from("AppBundle:Word", "w")
-            ->where("w.wordType = :wordType")
+            ->where("w.wordType = :wordType")->andWhere("w.enabled = :enabled")
             ->orderBy("w.word", "ASC")->addOrderBy("w.created", "DESC")
-            ->setParameter("wordType", $wordType)
+            ->setParameters(array("wordType" => $wordType, "enabled" => 1))
             ->getQuery()->getResult(Query::HYDRATE_ARRAY);
 
         if (!$words) {
@@ -51,7 +51,8 @@ class WordRepository extends EntityRepository
     {
         $count = $this->getEntityManager()->createQueryBuilder()
             ->select("count(w)")
-            ->from("AppBundle:Word", "w")
+            ->from("AppBundle:Word", "w")->where("w.enabled = :enabled")
+            ->setParameter("enabled", 1)
             ->getQuery()->getSingleScalarResult();
 
         if (!$count) {
@@ -65,8 +66,9 @@ class WordRepository extends EntityRepository
     {
         $count = $this->getEntityManager()->createQueryBuilder()
             ->select("count(w)")
-            ->from("AppBundle:Word", "w")->where("w.genreType = :genreType")
-            ->setParameter("genreType", $genreType)
+            ->from("AppBundle:Word", "w")
+            ->where("w.genreType = :genreType")->andWhere("w.enabled = :enabled")
+            ->setParameters(array("genreType" => $genreType, "enabled" => 1))
             ->getQuery()->getSingleScalarResult();
 
         if (!$count) {
@@ -85,6 +87,7 @@ class WordRepository extends EntityRepository
         $newWord->setBackup(0);
         $newWord->setCreated($created);
         $newWord->setModified(0);
+        $newWord->setEnabled(1);
 
         $this->getEntityManager()->persist($newWord);
         $this->getEntityManager()->flush();
@@ -97,8 +100,8 @@ class WordRepository extends EntityRepository
         $count = $this->getEntityManager()->createQueryBuilder()
             ->select("count(w)")
             ->from("AppBundle:Word", "w")
-            ->where("w.wordType = :wordType")->andWhere("w.genreType = :genreType")
-            ->setParameters(array("wordType" => $wordType, "genreType" => $genreType))
+            ->where("w.wordType = :wordType")->andWhere("w.genreType = :genreType")->andWhere("w.enabled = :enabled")
+            ->setParameters(array("wordType" => $wordType, "genreType" => $genreType, "enabled" => 1))
             ->getQuery()->getSingleScalarResult();
 
         if (!$count) {
@@ -123,6 +126,7 @@ class WordRepository extends EntityRepository
     {
         $word = $this->find($id);
         $word->setEnabled(0);
+        $word->setModified(1);
 
 //        $this->getEntityManager()->remove($word);
         $this->getEntityManager()->flush();

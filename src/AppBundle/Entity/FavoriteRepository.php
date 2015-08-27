@@ -97,6 +97,7 @@ class FavoriteRepository extends EntityRepository
     {
         $favorite = $this->find($id);
         $favorite->setEnabled(0);
+        $favorite->setModified(1);
 
 //        $this->getEntityManager()->remove($favorite);
         $this->getEntityManager()->flush();
