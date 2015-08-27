@@ -93,6 +93,22 @@ class FavoriteRepository extends EntityRepository
         return $newFavorite;
     }
 
+    public function updateRate($id, $rate)
+    {
+        $favorite = $this->find($id);
+        $favorite->setRate($rate);
+
+        $this->getEntityManager()->flush();
+    }
+
+    public function updateParentId($id, $parentId)
+    {
+        $favorite = $this->find($id);
+        $favorite->setParentId($parentId);
+
+        $this->getEntityManager()->flush();
+    }
+
     public function delete($id)
     {
         $favorite = $this->find($id);

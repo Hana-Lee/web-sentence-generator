@@ -46,6 +46,14 @@ class FavoriteCategoryRepository extends EntityRepository
         return $newFavoriteCategory;
     }
 
+    public function updateName($id, $categoryName)
+    {
+        $favoriteCategory = $this->find($id);
+        $favoriteCategory->setName($categoryName);
+
+        $this->getEntityManager()->flush();
+    }
+
     public function delete($id)
     {
         $favoriteCategory = $this->find($id);

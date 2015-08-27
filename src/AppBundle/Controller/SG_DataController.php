@@ -10,6 +10,7 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Constraints\Regex;
 
 class SG_DataController extends Controller
 {
@@ -222,6 +223,48 @@ class SG_DataController extends Controller
         $this->getFavoriteCategoryRepository()->delete($favoriteCategoryId);
 
         return new Response("즐겨찾기 카테고리 삭제 성공");
+    }
+
+    /**
+     * @Route("/update/favorite/{favoriteId}/rate/{rate}")
+     *
+     * @param $favoriteId
+     * @param $rate
+     * @return Response
+     */
+    public function updateFavoriteRateAction($favoriteId, $rate)
+    {
+        $this->getFavoriteRepository()->updateRate($favoriteId, $rate);
+
+        return new Response("평가 업데이트 성공");
+    }
+
+    /**
+     * @Route("/update/favorite/{favoriteId}/parent/{parentId}")
+     *
+     * @param $favoriteId
+     * @param $parentId
+     * @return Response
+     */
+    public function updateFavoriteParentIdAction($favoriteId, $parentId)
+    {
+        $this->getFavoriteRepository()->updateParentId($favoriteId, $parentId);
+
+        return new Response("카테고리 업데이트 성공");
+    }
+
+    /**
+     * @Route("/update/favorite/category/{favoriteCategoryId}/name/{categoryName}")
+     *
+     * @param $favoriteCategoryId
+     * @param $categoryName
+     * @return Response
+     */
+    public function updateFavoriteCategoryNameAction($favoriteCategoryId, $categoryName)
+    {
+        $this->getFavoriteCategoryRepository()->updateName($favoriteCategoryId, $categoryName);
+
+        return new Response("이름 업데이트 완료");
     }
 
     private function getWordRepository()
