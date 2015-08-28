@@ -195,8 +195,15 @@
             var wordData = getWordDataByGenre(genre);
             var totalSentenceCount = Number(sg.context.settingValue.sentenceCount);
             var result = [];
+	        var wordDataCheck = true;
+	        $(wordData).each(function(index, elem) {
+		        if (isUndefined(elem) || elem.length === 0) {
+			        wordDataCheck = false;
+			        return false;
+		        }
+	        });
 
-            if (wordData.length === 4) {
+            if (wordDataCheck && wordData.length === 4) {
                 var wordList = [];
 
 	            var settingValue = sg.context.settingValue;
@@ -275,6 +282,8 @@
 
 		            result.push(sentenceData);
 	            }
+            } else {
+	            showMessagePopup("조합 할 단어가 부족합니다.");
             }
 
             return result;
