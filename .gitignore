@@ -201,3 +201,6 @@ crashlytics-build.properties
 # Created by .ignore support plugin (hsz.mobi)
 
 data/sg.db_*
+
+# bower dependecies
+web/assets/vendor/

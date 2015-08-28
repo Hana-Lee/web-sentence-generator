@@ -1,0 +1,30 @@
+{
+  "name": "Sentence Generator",
+  "version": "0.0.1",
+  "homepage": "https://github.com/leehana-android/web-sentence-generator",
+  "authors": [
+    "Hana Lee <i@leehana.co.kr>"
+  ],
+  "description": "Sentence random generator",
+  "main": "sg.js",
+  "moduleType": [
+    "amd"
+  ],
+  "keywords": [
+    "sg"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "web/assets/vendor/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "flux": "~2.1.1",
+    "jquery": "~2.1.4",
+    "webix": "~2.5.8"
+  }
+}
