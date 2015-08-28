@@ -267,6 +267,36 @@ class SG_DataController extends Controller
         return new Response("이름 업데이트 완료");
     }
 
+	/**
+	 * @Route("/get/setting")
+	 *
+	 * @return Response
+	 */
+	public function settingAction()
+	{
+		$setting = $this->getSettingRepository()->findOneWithArrayResult();
+
+		return new Response(json_encode($setting));
+	}
+
+	/**
+	 * @Route("/update/setting")
+	 *
+	 * @return Response
+	 */
+	public function updateSettingAction()
+	{
+		$params = array();
+		$content = $this->get("request")->getContent();
+		if (!empty($content)) {
+			$params = json_decode($content, true); // 2nd param to get as array
+		}
+
+		$this->getSettingRepository()->update($params);
+
+		return new Response("설정 저장 완료");
+	}
+
     private function getWordRepository()
     {
         return $this->getDoctrine()->getManager()->getRepository("AppBundle:Word");
@@ -281,6 +311,11 @@ class SG_DataController extends Controller
     {
         return $this->getDoctrine()->getManager()->getRepository("AppBundle:FavoriteCategory");
     }
+
+	private function getSettingRepository()
+	{
+		return $this->getDoctrine()->getRepository("AppBundle:Setting");
+	}
 }
 
 /**
