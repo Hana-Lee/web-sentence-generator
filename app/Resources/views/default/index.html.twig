@@ -136,7 +136,7 @@
             }).show();
         }
 
-        function showUpdateCompletedPopup(message) {
+        function showMessagePopup(message) {
             webix.alert({
                 title:"확인",
                 type:"alert-error",
@@ -150,9 +150,9 @@
                 "Content-type":"application/json"
             }).post("update/word", JSON.stringify(data), function(text, obj, response){
                 if (response.status === 200) {
-                    showUpdateCompletedPopup(text);
+                    showMessagePopup(text);
                 } else {
-                    showUpdateCompletedPopup("업데이트 실패");
+                    showMessagePopup("업데이트 실패");
                 }
             });
         }
@@ -585,26 +585,45 @@
                 var currentGenre = sg.genre[currentGenreId];
 
                 var newData = createNewWordToServer(currentWord, currentGenre, newWordValue);
-                $$(currentTabBarItemId).add(newData, 0);
-                $$(currentTabBarItemId).addRowCss(newData.id, "new_word_value");
+
+	            if (newData) {
+		            $$(currentTabBarItemId).add(newData, 0);
+		            $$(currentTabBarItemId).addRowCss(newData.id, "new_word_value");
+	            }
             }
         }
 
+        function isNotExistWord(newWord) {
+	        var currentDataTableId = $$("dt_tabbar").getValue();
+	        var currentDataTable = $$(currentDataTableId);
+
+	        var result = currentDataTable.find(function (obj) {
+		        return obj.word.toLowerCase().indexOf(newWord) !== -1;
+	        });
+
+	        return result.length === 0;
+        }
         function createNewWordToServer(word, genre, newWord) {
-            var dateObj = new Date();
-            var currentTime = dateObj.getTime();
-            var newWordResponseData = webix.ajax().sync().post("new/word/" + word.code + "/" + genre.code + "/" + newWord + "/" + currentTime);
-            var result = {};
-            if (newWordResponseData.status === 200) {
-                var jsonData = JSON.parse(newWordResponseData.responseText);
-                jsonData.status = 0;
-                jsonData.number = 0;
-                jsonData.created = new Date(Number(jsonData.created));
+	        var result;
+	        if (isNotExistWord(newWord)) {
+		        var dateObj = new Date();
+		        var currentTime = dateObj.getTime();
+		        newWord = encodeURIComponent(newWord);
+		        var newWordResponseData = webix.ajax().sync().post("new/word/" + word.code + "/" + genre.code + "/" + newWord + "/" + currentTime);
 
-                result = jsonData;
-            }
+		        if (newWordResponseData.status === 200) {
+			        var jsonData = JSON.parse(newWordResponseData.responseText);
+			        jsonData.status = 0;
+			        jsonData.number = 0;
+			        jsonData.created = new Date(Number(jsonData.created));
 
-            return result;
+			        result = jsonData;
+		        }
+	        } else {
+		        showMessagePopup("존재하는 단어 입니다 : " + newWord);
+	        }
+
+	        return result;
         }
 
         function getFavoriteRateItemCount(rate) {
@@ -1213,9 +1232,9 @@
 		        "Content-type":"application/json"
 	        }).post("update/setting", JSON.stringify(settingValue), function(text, obj, response){
 		        if (response.status === 200) {
-			        showUpdateCompletedPopup(text);
+			        showMessagePopup(text);
 		        } else {
-			        showUpdateCompletedPopup("설정 저장 실패");
+			        showMessagePopup("설정 저장 실패");
 		        }
 	        });
         }

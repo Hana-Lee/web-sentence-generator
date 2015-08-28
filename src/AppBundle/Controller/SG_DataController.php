@@ -118,6 +118,7 @@ class SG_DataController extends Controller
      */
     public function newWordAction($wordType, $genreType, $newValue, $created)
     {
+		$newValue = urldecode($newValue);
         $newWord = $this->getWordRepository()->create($wordType, $genreType, $newValue, $created);
 
         $serializer = new Serializer($this->getDoctrine()->getEntityManager());
