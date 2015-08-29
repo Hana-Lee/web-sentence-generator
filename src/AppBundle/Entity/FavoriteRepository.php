@@ -75,16 +75,18 @@ class FavoriteRepository extends EntityRepository
         return $favorites;
     }
 
-    public function create($newValue, $parentId, $genreType, $created)
+    public function create($params)
     {
         $newFavorite = new Favorite();
-        $newFavorite->setSentence($newValue);
-        $newFavorite->setParentId($parentId);
-        $newFavorite->setGenreType($genreType);
+
+		$sentence = urldecode($params["sentence"]);
+        $newFavorite->setSentence($sentence);
+        $newFavorite->setParentId($params["parentId"]);
+        $newFavorite->setGenreType($params["genreType"]);
         $newFavorite->setEnabled(1);
         $newFavorite->setBackup(0);
-        $newFavorite->setRate(1);
-        $newFavorite->setCreated($created);
+        $newFavorite->setRate($params["rate"]);
+        $newFavorite->setCreated($params["created"]);
         $newFavorite->setModified(0);
 
         $this->getEntityManager()->persist($newFavorite);
@@ -109,9 +111,9 @@ class FavoriteRepository extends EntityRepository
         $this->getEntityManager()->flush();
     }
 
-    public function delete($id)
+    public function delete($params)
     {
-        $favorite = $this->find($id);
+        $favorite = $this->find($params["id"]);
         $favorite->setEnabled(0);
         $favorite->setModified(1);
 

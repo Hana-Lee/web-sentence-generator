@@ -278,7 +278,7 @@
 
 		            var generatedSentence = '<p dir="ltr">' + generatedSentenceArray.join(" ") + '</p>';
 
-		            var sentenceData = {id:j, number:j+1, status:0, sentence:generatedSentence, star:sg.rateCharacter[1], created:createdDate, timestamp:createdTimestamp};
+		            var sentenceData = {id:j, number:j+1, status:0, sentence:generatedSentence, star:sg.rateCharacter[1], rate:1, genre: genre, created:createdDate, timestamp:createdTimestamp};
 
 		            result.push(sentenceData);
 	            }
@@ -748,12 +748,22 @@
             return result;
         }
 
-        function getCurrentGenre() {
-            var selectedItem = $$("genre_list_side_menu").getSelectedItem();
-            return sg.genre[selectedItem.id];
+        function getCurrentGenre(type) {
+	        if (isUndefined(type)) {
+		        type = "word";
+	        }
+
+	        var selectedItem;
+	        if (type === "word") {
+		        selectedItem = $$("genre_list_side_menu").getSelectedItem();
+	        } else if (type === "generate") {
+		        selectedItem = $$("generated_sentence_side_menu").getSelectedItem();
+	        }
+
+	        return sg.genre[selectedItem.id];
         }
 
-        function dataTableTabBarTitleAddWordCount(genreId, titleArray) {
+        function wordDataTableTabBarTitleAddWordCount(genreId, titleArray) {
             var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
 
             $tabbarTitleElements.each(function(index, elem) {
@@ -935,7 +945,7 @@
                         var titleArray = this.titleArray;
 
                         var currentGenre = getCurrentGenre();
-                        dataTableTabBarTitleAddWordCount(currentGenre.id, titleArray);
+                        wordDataTableTabBarTitleAddWordCount(currentGenre.id, titleArray);
                     },
                     onBeforeTabClick : function() {
                         var $tabbarTitleElements = $("div[view_id='dt_tabbar']").find(".webix_item_tab");
@@ -966,6 +976,9 @@
                 ],
                 on: {
                     onChange: function(newValue, oldValue) {
+	                    if (newValue === sg.dataTable.prefix + "generated_sentence_favorite") {
+		                    $$("save_favorite_contextMenu").attachTo($$(sg.dataTable.prefix + "generated_sentence_favorite"));
+	                    }
                         var titleArray = this.titleArray;
                         updateGeneratedSentenceTabTitle(titleArray[1]);
                     },
@@ -1051,6 +1064,8 @@
                             updateFavoriteTabViewTitle(selectedItemText);
                             updateFavoriteRateDataTable(rate);
                         }
+
+	                    $$("delete_favorite_contextMenu").attachTo($$(sg.dataTable.prefix + "rate"));
                     }
                 }
             };
@@ -1072,6 +1087,8 @@
                             updateFavoriteTabViewTitle(selectedItemText);
                             updateFavoriteNameDataTable(id);
                         }
+
+	                    $$("delete_favorite_contextMenu").attachTo($$(sg.dataTable.prefix + "name"));
                     }
                 }
             };
@@ -1155,7 +1172,7 @@
                         }
                     },
                     onAfterSelect: function(id) {
-                        dataTableTabBarTitleAddWordCount(id);
+                        wordDataTableTabBarTitleAddWordCount(id);
                     }
                 }
             };
@@ -1305,6 +1322,248 @@
 	        }).show();
         }
 
+        function getContextMenu() {
+	        return {
+		        id: "sg_contextMenu", view: "contextmenu", data: ["선택", {template: "Separator"}, "저장"],
+		        on: {
+			        onItemClick: function(id) {
+				        showMessagePopup("저장이 완료 되었습니다.");
+			        }
+		        }
+	        };
+        }
+
+        function getSelectedGeneratedFavoriteData() {
+	        var favoriteDataTable = $$(sg.dataTable.prefix + "generated_sentence_favorite");
+	        var saveTargetData = [];
+	        favoriteDataTable.eachRow(function(rowId) {
+		        var rowItem = favoriteDataTable.getItem(rowId);
+
+		        if (rowItem.status) {
+			        var favoriteData = {
+				        sentence: encodeURIComponent(rowItem.sentence),
+				        genreType: rowItem.genre.code,
+				        rate: rowItem.rate,
+				        created: rowItem.timestamp
+			        };
+
+
+			        saveTargetData.push(favoriteData);
+		        }
+	        });
+
+	        return saveTargetData;
+        }
+
+        function createNewFavorites(saveTargetData) {
+	        webix.ajax().sync().headers({
+		        "Content-type":"application/json"
+	        }).post("new/favorite", JSON.stringify(saveTargetData), function(text, obj, response){
+		        if (response.status === 200) {
+			        showMessagePopup(text);
+		        } else {
+			        showMessagePopup("즐겨찾기 저장 실패");
+		        }
+	        });
+        }
+
+        function createNewFavoriteCategory(favoriteCategoryData) {
+	        var result;
+	        webix.ajax().sync().headers({
+		        "Content-type":"application/json"
+	        }).post("new/favorite/category", JSON.stringify(favoriteCategoryData), function(text, obj, response){
+		        if (response.status === 200) {
+			        result = response.responseText;
+		        } else {
+			        showMessagePopup("즐겨찾기 카테고리 저장 실패");
+		        }
+	        });
+
+	        return result;
+        }
+
+        function processCreateNewFavoriteAndCategory() {
+	        var newFavoriteCategoryData = {
+		        name: $$("favorite_name").getValue(),
+		        created: new Date().getTime(),
+		        genreType: getCurrentGenre("generate")
+	        };
+	        var saveTargetData = getSelectedGeneratedFavoriteData();
+	        if (saveTargetData.length > 0) {
+		        var result = createNewFavoriteCategory(newFavoriteCategoryData);
+
+		        createNewFavorites(saveTargetData);
+
+		        $$(sg.dataTable.prefix + "generated_sentence_favorite").clearAll();
+	        } else {
+		        showMessagePopup("선택된 데이터가 없습니다.");
+	        }
+        }
+
+        function getFavoriteSaveForm() {
+	        return {
+		        id: "favorite_save_form", view: "form", borderless:true, elements: [
+			        { id: "favorite_name", view: "text", label: "<strong>즐겨찾기 이름</strong>", value:webix.i18n.fullDateFormatStr(new Date()), on:{
+				        onItemClick: function(id, event) {
+					        $("div[view_id='favorite_name']").find("input").select();
+				        },
+				        onKeyPress: function(keyCode, event) {
+					        if (keyCode === 13) {
+						        processCreateNewFavoriteAndCategory();
+
+						        $$("favorite_save_window").close();
+					        }
+				        }
+			        }},
+			        {cols: [
+				        {
+					        view: "button", value: "저장", type: "form", click: function() {
+						        processCreateNewFavoriteAndCategory();
+
+						        $$("favorite_save_window").close();
+					        }
+				        },
+				        {
+					        view: "button", value: "닫기", type: "danger", click: function() {
+						        $$("favorite_save_window").close();
+					        }
+				        }
+			        ]}
+		        ],
+		        elementsConfig: {
+			        labelPosition: "top"
+		        }
+	        };
+        }
+
+        function getSelectedWordData() {
+	        var currentDataTableId = $$(sg.dataTable.prefix + "tabbar").getValue();
+			var currentDataTable = $$(currentDataTableId);
+	        var selectedItem = [];
+	        currentDataTable.eachRow(function(rowId) {
+		        var rowItem = currentDataTable.getItem(rowId);
+
+		        if (rowItem.status) {
+			        var data = {
+				        id:rowItem.id
+			        };
+
+			        selectedItem.push(data);
+		        }
+	        });
+
+	        return selectedItem;
+        }
+
+        function getSelectedFavoriteData() {
+	        var currentDataTable = $$(sg.dataTable.prefix + "name");
+	        if (isUndefined(currentDataTable)) {
+		        currentDataTable = $$(sg.dataTable.prefix + "rate");
+	        }
+
+	        var selectedItem = [];
+	        currentDataTable.eachRow(function(rowId) {
+		        var rowItem = currentDataTable.getItem(rowId);
+
+		        if (rowItem.status) {
+			        var data = {
+				        id:rowItem.id
+			        };
+
+			        selectedItem.push(data);
+		        }
+	        });
+
+	        return selectedItem;
+        }
+
+        function deleteWord(deleteTargetData) {
+	        var result;
+	        webix.ajax().sync().headers({
+		        "Content-type":"application/json"
+	        }).post("delete/word", JSON.stringify(deleteTargetData), function(text, obj, response){
+		        if (response.status === 200) {
+			        showMessagePopup(response.responseText);
+		        } else {
+			        showMessagePopup("단어 삭제 실패");
+		        }
+
+		        result = response.status;
+	        });
+
+	        return result === 200;
+        }
+
+        function processDeleteWord() {
+	        var deleteTargetData = getSelectedWordData();
+	        if (deleteWord(deleteTargetData)) {
+		        var currentDataTableId = $$(sg.dataTable.prefix + "tabbar").getValue();
+		        var currentDataTable = $$(currentDataTableId);
+
+		        $(deleteTargetData).each(function(index, elem) {
+			        currentDataTable.remove(elem.id);
+		        });
+	        }
+        }
+
+        function deleteFavorite(deleteTargetData) {
+	        var result;
+	        webix.ajax().sync().headers({
+		        "Content-type":"application/json"
+	        }).post("delete/favorite", JSON.stringify(deleteTargetData), function(text, obj, response){
+		        if (response.status === 200) {
+			        showMessagePopup(response.responseText);
+		        } else {
+			        showMessagePopup("즐겨찾기 삭제 실패");
+		        }
+
+		        result = response.status;
+	        });
+
+	        return result === 200;
+        }
+
+        function processDeleteFavorite() {
+	        var deleteTargetData = getSelectedFavoriteData();
+	        if (deleteFavorite(deleteTargetData)) {
+		        var currentDataTable = $$(sg.dataTable.prefix + "name");
+		        if (isUndefined(currentDataTable)) {
+			        currentDataTable = $$(sg.dataTable.prefix + "rate");
+		        }
+
+		        $(deleteTargetData).each(function(index, elem) {
+			        currentDataTable.remove(elem.id);
+		        });
+	        }
+        }
+
+        function deleteConfirmWindow(type) {
+	        webix.confirm({
+		        title: "확인", ok: "삭제", cancel: "닫기", text: "정말 삭제 하시겠습니까?", type: "confirm-error",
+		        callback: function(result) {
+			        if (result) {
+				        if (type === "word") {
+					        processDeleteWord();
+				        } else if (type === "favorite") {
+					        processDeleteFavorite();
+				        }
+			        }
+		        }
+	        });
+        }
+
+        function showFavoriteSaveWindow() {
+	        webix.ui({
+		        id: "favorite_save_window",
+		        view:"window",
+		        width: 340,
+		        position:"center",
+		        head:"즐겨찾기 저장",
+		        body: getFavoriteSaveForm(),
+		        modal: true
+	        }).show();
+        }
+
         webix.ui({
             id:"main_container", type:"wide", css:"main_container", cols:[
                 {
@@ -1316,9 +1575,50 @@
             ]
         });
 
+        webix.ui({
+	        id: "save_favorite_contextMenu", view: "contextmenu", data: ["저장"],
+	        on: {
+		        onItemClick: function(id) {
+			        showFavoriteSaveWindow();
+		        }
+	        }
+        });
+
+        webix.ui({
+	        id: "delete_favorite_contextMenu", view: "contextmenu", data: ["삭제"],
+	        on: {
+		        onItemClick: function(id) {
+			        var data = getSelectedFavoriteData();
+			        if (data.length > 0) {
+				        deleteConfirmWindow("favorite");
+			        } else {
+				        showMessagePopup("선택된 즐겨찾기가 없습니다.");
+			        }
+		        }
+	        }
+        });
+
+        webix.ui({
+	        id: "delete_word_contextMenu", view: "contextmenu", data: ["삭제"],
+	        on: {
+		        onItemClick: function(id) {
+			        var data = getSelectedWordData();
+			        if (data.length > 0) {
+				        deleteConfirmWindow("word");
+			        } else {
+				        showMessagePopup("선택된 단어가 없습니다.");
+			        }
+		        }
+	        }
+        });
+
         webix.extend($$("main_container"), webix.ProgressBar);
 
         $$("genre_list_side_menu").select(sg.genre.poetry.id);
         $$("word_input_title").setValue(sg.word.noun.name);
+        $$("delete_word_contextMenu").attachTo($$(sg.dataTable.prefix + "noun"));
+        $$("delete_word_contextMenu").attachTo($$(sg.dataTable.prefix + "verb"));
+        $$("delete_word_contextMenu").attachTo($$(sg.dataTable.prefix + "adverb"));
+        $$("delete_word_contextMenu").attachTo($$(sg.dataTable.prefix + "adjective"));
     </script>
 {% endblock %}

@@ -122,9 +122,9 @@ class WordRepository extends EntityRepository
         return $word;
     }
 
-    public function delete($id)
+    public function delete($params)
     {
-        $word = $this->find($id);
+        $word = $this->find($params["id"]);
         $word->setEnabled(0);
         $word->setModified(1);
 

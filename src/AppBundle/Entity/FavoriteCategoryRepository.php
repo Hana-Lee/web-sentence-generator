@@ -29,15 +29,15 @@ class FavoriteCategoryRepository extends EntityRepository
         return $favoriteCategories;
     }
 
-    public function create($name, $created, $genreType)
+	public function create(array $params)
     {
         $newFavoriteCategory = new FavoriteCategory();
-        $newFavoriteCategory->setName($name);
+        $newFavoriteCategory->setName($params["name"]);
         $newFavoriteCategory->setRate(1);
-        $newFavoriteCategory->setCreated($created);
+        $newFavoriteCategory->setCreated($params["created"]);
         $newFavoriteCategory->setBackup(0);
         $newFavoriteCategory->setEnabled(1);
-        $newFavoriteCategory->setGenreType($genreType);
+        $newFavoriteCategory->setGenreType($params["genreType"]);
         $newFavoriteCategory->setModified(0);
 
         $this->getEntityManager()->persist($newFavoriteCategory);

@@ -188,27 +188,79 @@ class SG_DataController extends Controller
     }
 
     /**
-     * @Route("/delete/word/{wordId}")
+     * @Route("/delete/word")
      *
-     * @param $wordId
      * @return Response
      */
-    public function deleteWordAction($wordId)
+    public function deleteWordAction()
     {
-        $this->getWordRepository()->delete($wordId);
+		$params = array();
+		$content = $this->get("request")->getContent();
+		if (!empty($content)) {
+			$params = json_decode($content, true); // 2nd param to get as array
+		}
+
+		foreach($params as $value) {
+			$this->getWordRepository()->delete($value);
+		}
 
         return new Response("단어 삭제 성공");
     }
 
+	/**
+	 * @Route("/new/favorite/category")
+	 *
+	 * @return Response
+	 */
+	public function newFavoriteCategoryAction()
+	{
+		$params = array();
+		$content = $this->get("request")->getContent();
+		if (!empty($content)) {
+			$params = json_decode($content, true); // 2nd param to get as array
+		}
+
+		$newFavoriteCategory = $this->getFavoriteCategoryRepository()->create($params);
+
+		return new Response($newFavoriteCategory->getId());
+	}
+
+	/**
+	 * @Route("/new/favorite")
+	 *
+	 * @return Response
+	 */
+	public function newFavoriteAction()
+	{
+		$params = array();
+		$content = $this->get("request")->getContent();
+		if (!empty($content)) {
+			$params = json_decode($content, true); // 2nd param to get as array
+		}
+
+		foreach($params as $value) {
+			$this->getFavoriteRepository()->create($value);
+		}
+
+		return new Response("즐겨찾기 추가 성공");
+	}
+
     /**
-     * @Route("/delete/favorite/{favoriteId}")
+     * @Route("/delete/favorite")
      *
-     * @param $favoriteId
      * @return Response
      */
-    public function deleteFavoriteAction($favoriteId)
+    public function deleteFavoriteAction()
     {
-        $this->getFavoriteRepository()->delete($favoriteId);
+		$params = array();
+		$content = $this->get("request")->getContent();
+		if (!empty($content)) {
+			$params = json_decode($content, true); // 2nd param to get as array
+		}
+
+		foreach($params as $value) {
+			$this->getFavoriteRepository()->delete($value);
+		}
 
         return new Response("즐겨찾기 삭제 성공");
     }
