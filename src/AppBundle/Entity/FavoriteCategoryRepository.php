@@ -32,7 +32,7 @@ class FavoriteCategoryRepository extends EntityRepository
 	public function create(array $params)
     {
         $newFavoriteCategory = new FavoriteCategory();
-        $newFavoriteCategory->setName($params["name"]);
+        $newFavoriteCategory->setName(urldecode($params["name"]));
         $newFavoriteCategory->setRate(1);
         $newFavoriteCategory->setCreated($params["created"]);
         $newFavoriteCategory->setBackup(0);

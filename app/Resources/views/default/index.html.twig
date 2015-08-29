@@ -1384,14 +1384,16 @@
 
         function processCreateNewFavoriteAndCategory() {
 	        var newFavoriteCategoryData = {
-		        name: $$("favorite_name").getValue(),
+		        name: encodeURIComponent($$("favorite_name").getValue()),
 		        created: new Date().getTime(),
 		        genreType: getCurrentGenre("generate")
 	        };
 	        var saveTargetData = getSelectedGeneratedFavoriteData();
 	        if (saveTargetData.length > 0) {
 		        var result = createNewFavoriteCategory(newFavoriteCategoryData);
-
+                $(saveTargetData).each(function(index, elem) {
+                    elem.parentId = result;
+                });
 		        createNewFavorites(saveTargetData);
 
 		        $$(sg.dataTable.prefix + "generated_sentence_favorite").clearAll();
